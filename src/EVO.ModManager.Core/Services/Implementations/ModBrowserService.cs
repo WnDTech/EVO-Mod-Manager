@@ -189,11 +189,18 @@ public class ModBrowserService : IModBrowserService
 
         Directory.CreateDirectory(downloadDir);
 
-        var url = mod.DownloadUrl.StartsWith("http")
+        var pageUrl = mod.DownloadUrl.StartsWith("http")
             ? mod.DownloadUrl
             : $"https://www.overtake.gg{mod.DownloadUrl}";
 
-        using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        // Resolve the actual download URL (mod page -> direct download link)
+        var downloadUrl = await ResolveDownloadUrlAsync(pageUrl, ct);
+        if (string.IsNullOrEmpty(downloadUrl))
+            throw new InvalidOperationException("Could not find download link on mod page");
+
+        Log.Information("Downloading {Title} from {Url}", mod.Title, downloadUrl);
+
+        using var response = await HttpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         response.EnsureSuccessStatusCode();
 
         var totalBytes = response.Content.Headers.ContentLength ?? -1;
@@ -221,8 +228,58 @@ public class ModBrowserService : IModBrowserService
             await contentStream.CopyToAsync(fileStream, ct);
         }
 
-        Log.Information("Downloaded mod {Title} to {Path}", mod.Title, filePath);
+        Log.Information("Downloaded {Title} ({Size}) -> {Path}", mod.Title,
+            totalBytes > 0 ? $"{totalBytes / 1024.0:F1}KB" : "unknown", filePath);
         return filePath;
+    }
+
+    private async Task<string?> ResolveDownloadUrlAsync(string pageUrl, CancellationToken ct)
+    {
+        try
+        {
+            using var response = await HttpClient.GetAsync(pageUrl, ct);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
+
+            // If it's already a direct download, return as-is
+            if (!contentType.Contains("html", StringComparison.OrdinalIgnoreCase))
+                return pageUrl;
+
+            var html = await response.Content.ReadAsStringAsync(ct);
+
+            // Try common OverTake.gg download button patterns
+            var patterns = new[]
+            {
+                @"href=""(/downloads/[^""]+/download)""",
+                @"href=""(/attachments/[^""]+)""",
+                @"data-url=""([^""]+download[^""]*)""",
+                @"class=""[^""]*overlayTrigger[^""]*""\s+href=""([^""]+)""",
+                @"class=""[^""]*downloadButton[^""]*""[^>]*href=""([^""]+)"""
+            };
+
+            foreach (var pattern in patterns)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(html, pattern,
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    var url = match.Groups[1].Value;
+                    if (!url.StartsWith("https://") && !url.StartsWith("http://"))
+                        url = $"https://www.overtake.gg{url}";
+                    Log.Information("Resolved download URL: {Url}", url);
+                    return url;
+                }
+            }
+
+            Log.Warning("No download link found on page: {Url}", pageUrl);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to resolve download URL for {Url}", pageUrl);
+            return null;
+        }
     }
 
     private static List<DownloadableMod> FilterByCategory(List<DownloadableMod> mods, ModType? category)
