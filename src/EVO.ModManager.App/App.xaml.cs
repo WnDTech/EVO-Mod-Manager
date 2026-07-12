@@ -58,12 +58,12 @@ public partial class App : System.Windows.Application
         RegisterServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
-        var mainWindow = Current.MainWindow;
-        if (mainWindow == null) return;
-
-        // Wire up MainViewModel and navigation
+        // Create MainWindow manually so DataContext is set before window is shown
         var mainVm = _serviceProvider.GetRequiredService<MainViewModel>();
+        var mainWindow = new Views.MainWindow();
         mainWindow.DataContext = mainVm;
+        Current.MainWindow = mainWindow;
+
         mainVm.SettingsView = _serviceProvider.GetRequiredService<SettingsView>();
         mainVm.BrowseView = _serviceProvider.GetRequiredService<BrowseView>();
         var browseVm = _serviceProvider.GetRequiredService<BrowseViewModel>();
@@ -74,6 +74,8 @@ public partial class App : System.Windows.Application
             if (mainVm.InitializeCommand.CanExecute(null))
                 await mainVm.InitializeCommand.ExecuteAsync(null);
         };
+
+        mainWindow.Show();
 
         _ = CheckForUpdatesAsync();
 

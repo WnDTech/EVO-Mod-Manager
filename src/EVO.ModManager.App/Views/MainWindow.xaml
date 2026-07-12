@@ -6,12 +6,8 @@
         Width="1280" Height="820"
         MinWidth="960" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        AllowDrop="True"
-        Drop="OnDrop"
-        Background="#0D0D1A"
-        TextOptions.TextFormattingMode="Display"
-        SnapsToDevicePixels="True"
-        UseLayoutRounding="True">
+        AllowDrop="True" Drop="OnDrop"
+        Background="#0D0D1A" Foreground="#EAEAEA">
 
     <Window.Resources>
         <conv:ModTypeToIconConverter x:Key="ModTypeIcon"/>
@@ -20,83 +16,6 @@
         <conv:BoolToStatusColorConverter x:Key="StatusColor"/>
         <conv:BytesToSizeConverter x:Key="BytesSize"/>
         <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
-
-        <Style x:Key="SidebarButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8888AA"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Padding" Value="20,10"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1A1A3E"/>
-                    <Setter Property="Foreground" Value="#EAEAEA"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#E94560"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" Value="0.85"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#1E1E3A"/>
-            <Setter Property="Foreground" Value="#C0C0E0"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#2A2A4A"/>
-            <Setter Property="Padding" Value="14,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A2A4A"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
 
     <Grid>
@@ -107,52 +26,44 @@
         </Grid.RowDefinitions>
 
         <!-- TOP BAR -->
-        <Border Grid.Row="0" Background="#12122A"
-                BorderBrush="#1E1E3E" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="#12122A" BorderBrush="#1E1E3E" BorderThickness="0,0,0,1">
             <Grid Margin="16,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="EVO" FontSize="20" FontWeight="Bold"
-                               Foreground="#E94560" VerticalAlignment="Center"/>
-                    <TextBlock Text="Mod Manager" FontSize="20" FontWeight="SemiBold"
-                               Foreground="#C0C0E0" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    <TextBlock Text="EVO" FontSize="20" FontWeight="Bold" Foreground="#E94560"/>
+                    <TextBlock Text="Mod Manager" FontSize="20" FontWeight="SemiBold" Foreground="#C0C0E0" Margin="4,0,0,0"/>
                 </StackPanel>
-
-                <StackPanel Grid.Column="1" Orientation="Horizontal"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Background="#1A1A3E" CornerRadius="6" Height="32"
-                            BorderBrush="#2A2A4A" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="200"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="🔍" FontSize="12"
-                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
-                            <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="Transparent" Foreground="#C0C0E0"
-                                     BorderThickness="0" VerticalAlignment="Center"
-                                     FontSize="12" Padding="8,0"/>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-
+                <Border Grid.Column="1" Background="#1A1A3E" CornerRadius="6" Height="32"
+                        BorderBrush="#2A2A4A" BorderThickness="1" Width="260"
+                        HorizontalAlignment="Center">
+                    <Grid Margin="10,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="🔍" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" Foreground="#C0C0E0" BorderThickness="0"
+                                 VerticalAlignment="Center" FontSize="12" Padding="8,0" Margin="4,0,0,0"/>
+                    </Grid>
+                </Border>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
-                            Command="{Binding OpenBrowseCommand}" Content="Browse"/>
-                    <Button x:Name="PlayButton" Style="{StaticResource PrimaryButton}"
-                            Command="{Binding LaunchGameCommand}"
-                            Content="▶  Play"/>
+                    <Button Command="{Binding OpenBrowseCommand}" Content="Browse"
+                            Background="#1E1E3A" Foreground="#C0C0E0" BorderBrush="#2A2A4A"
+                            BorderThickness="1" Padding="14,7" FontSize="12" Cursor="Hand"
+                            Margin="0,0,8,0"/>
+                    <Button x:Name="PlayButton" Command="{Binding LaunchGameCommand}" Content="▶  Play"
+                            Background="#E94560" Foreground="White" BorderThickness="0"
+                            Padding="16,8" FontSize="13" FontWeight="SemiBold" Cursor="Hand"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN BODY -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
@@ -160,259 +71,204 @@
             </Grid.ColumnDefinitions>
 
             <!-- SIDEBAR -->
-            <Border Grid.Column="0" Background="#12122A"
-                    BorderBrush="#1E1E3E" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="#12122A" BorderBrush="#1E1E3E" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Drop Zone -->
-                    <Border Grid.Row="0" Background="#1A1A3E" Margin="12,12"
-                            CornerRadius="8" BorderBrush="#2A2A4A" BorderThickness="2" Height="80">
+                    <Border Grid.Row="0" Background="#1A1A3E" Margin="12,12" CornerRadius="8"
+                            BorderBrush="#2A2A4A" BorderThickness="2" Height="80">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="📦" FontSize="20" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Drop mods here" FontSize="10"
-                                       Foreground="#666688" HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
+                            <TextBlock Text="Drop mods here" FontSize="10" Foreground="#666688"
+                                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Nav Items -->
-                    <StackPanel Grid.Row="1" Margin="0,0,0,8">
-                        <TextBlock Text="MANAGE" FontSize="9" Foreground="#555577"
-                                   Margin="16,0,0,4" FontWeight="SemiBold"/>
-                        <Button Style="{StaticResource SidebarButton}"
-                                Command="{Binding NavigateToModsCommand}" Content="📦  Mods"/>
-                        <Button Style="{StaticResource SidebarButton}"
-                                Command="{Binding OpenBrowseCommand}" Content="🌐  Download"/>
-                        <Button Style="{StaticResource SidebarButton}" Content="📋  Profiles"/>
+                    <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                        <TextBlock Text="MANAGE" FontSize="9" Foreground="#555577" Margin="16,0,0,4" FontWeight="SemiBold"/>
+                        <Button Command="{Binding NavigateToModsCommand}" Content="📦  Mods"
+                                Background="Transparent" Foreground="#8888AA" BorderThickness="0"
+                                Cursor="Hand" HorizontalContentAlignment="Left" Padding="20,10" FontSize="13"/>
+                        <Button Command="{Binding OpenBrowseCommand}" Content="🌐  Download"
+                                Background="Transparent" Foreground="#8888AA" BorderThickness="0"
+                                Cursor="Hand" HorizontalContentAlignment="Left" Padding="20,10" FontSize="13"/>
+                        <Button Content="📋  Profiles"
+                                Background="Transparent" Foreground="#8888AA" BorderThickness="0"
+                                Cursor="Hand" HorizontalContentAlignment="Left" Padding="20,10" FontSize="13"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,0,8">
-                        <TextBlock Text="TOOLS" FontSize="9" Foreground="#555577"
-                                   Margin="16,0,0,4" FontWeight="SemiBold"/>
-                        <Button Style="{StaticResource SidebarButton}"
-                                IsEnabled="{Binding IsEditorAvailable}"
-                                Command="{Binding LaunchEditorCommand}"
-                                Content="🔧  ACE Editor"/>
-                        <Button Style="{StaticResource SidebarButton}"
-                                Command="{Binding OpenSettingsCommand}"
-                                Content="⚙  Settings"/>
+                    <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,0,12">
+                        <TextBlock Text="TOOLS" FontSize="9" Foreground="#555577" Margin="16,0,0,4" FontWeight="SemiBold"/>
+                        <Button Command="{Binding LaunchEditorCommand}" IsEnabled="{Binding IsEditorAvailable}"
+                                Content="🔧  ACE Editor"
+                                Background="Transparent" Foreground="#8888AA" BorderThickness="0"
+                                Cursor="Hand" HorizontalContentAlignment="Left" Padding="20,10" FontSize="13"/>
+                        <Button Command="{Binding OpenSettingsCommand}" Content="⚙  Settings"
+                                Background="Transparent" Foreground="#8888AA" BorderThickness="0"
+                                Cursor="Hand" HorizontalContentAlignment="Left" Padding="20,10" FontSize="13"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- CONTENT PANEL -->
-            <Border Grid.Column="1" Background="#0D0D1A" Padding="0">
+            <!-- CONTENT AREA -->
+            <Border Grid.Column="1" Background="#0D0D1A">
                 <Grid>
-                    <!-- Mods List View -->
-                    <Grid Visibility="{Binding IsModsViewVisible}">
+                    <!-- MODS VIEW -->
+                    <Grid Visibility="{Binding IsModsViewVisible, Converter={StaticResource BoolVis}}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="340" MinWidth="280"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Mod Grid -->
-                        <ScrollViewer Grid.Column="0" Margin="16,16,8,16"
-                                      Background="Transparent" BorderThickness="0">
-                        <ItemsControl ItemsSource="{Binding FilteredMods}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Width="220" Height="160" Margin="0,0,12,12"
-                                            Background="#161630" CornerRadius="10"
-                                            BorderBrush="#1E1E3E" BorderThickness="1"
-                                            Cursor="Hand"
-                                            MouseDown="ModCard_MouseDown">
-                                        <Grid Margin="0">
+                        <ScrollViewer Grid.Column="0" Margin="16,16,8,16" Background="Transparent" BorderThickness="0"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding FilteredMods}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="220" Height="150" Margin="0,0,12,12"
+                                                Background="#161630" CornerRadius="10"
+                                                BorderBrush="#1E1E3E" BorderThickness="1"
+                                                Cursor="Hand" MouseDown="ModCard_MouseDown">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Border Grid.Row="0" Background="#1A1A3E"
+                                                        CornerRadius="10,10,0,0" Padding="12,8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                            Text="{Binding ModType, Converter={StaticResource ModTypeIcon}}" FontSize="16"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding ModType}"
+                                                                   FontSize="10" Foreground="#666688"
+                                                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        <Border Grid.Column="2" CornerRadius="4" Padding="6,2">
+                                                            <Border.Background>
+                                                                <SolidColorBrush Color="{Binding IsEnabled, Converter={StaticResource StatusColor}}"/>
+                                                            </Border.Background>
+                                                            <TextBlock Text="{Binding IsEnabled, Converter={StaticResource StatusText}}"
+                                                                       FontSize="9" Foreground="White" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                                <StackPanel Grid.Row="1" Margin="12,8">
+                                                    <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="#EAEAEA" TextTrimming="CharacterEllipsis"
+                                                               MaxHeight="36" LineHeight="18"/>
+                                                    <TextBlock Text="{Binding Author, TargetNullValue='Unknown'}" FontSize="11"
+                                                               Foreground="#555577" Margin="0,2,0,0"/>
+                                                    <TextBlock Text="{Binding SizeBytes, Converter={StaticResource BytesSize}}"
+                                                               FontSize="10" Foreground="#444466" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <Border Grid.Row="2" Padding="8,6"
+                                                        BorderBrush="#1E1E3E" BorderThickness="0,1,0,0">
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding Version, TargetNullValue='-'}" FontSize="10" Foreground="#555577"/>
+                                                        <TextBlock Text="{Binding IsSymlinked}" FontSize="10"
+                                                                   Foreground="#555577" HorizontalAlignment="Right"/>
+                                                    </Grid>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <Border Grid.Column="1" Margin="0,16,16,16" Background="#161630"
+                                CornerRadius="12" BorderBrush="#1E1E3E" BorderThickness="1" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="Mod Details" FontSize="11" Foreground="#555577" FontWeight="SemiBold"/>
+                                <Border Background="#1A1A3E" CornerRadius="10" Margin="0,12,0,0" Padding="16" MinHeight="200">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedMod.Name, TargetNullValue='Select a mod'}"
+                                                   FontSize="16" FontWeight="Bold" Foreground="#EAEAEA" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding SelectedMod.FileName}" FontSize="11"
+                                                   Foreground="#444466" Margin="0,4,0,12"/>
+                                        <Separator Background="#1E1E3E" Margin="0,0,0,12"/>
+                                        <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
-
-                                            <!-- Card header: type icon + status -->
-                                            <Border Grid.Row="0" Background="#1A1A3E"
-                                                    CornerRadius="10,10,0,0" Padding="12,8">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0"
-                                                        Text="{Binding ModType, Converter={StaticResource ModTypeIcon}}"
-                                                        FontSize="16"/>
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding ModType}"
-                                                               FontSize="10" Foreground="#666688"
-                                                               VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                                    <Border Grid.Column="2" CornerRadius="4" Padding="6,2"
-                                                            Background="{Binding IsEnabled, Converter={StaticResource StatusColor}}">
-                                                        <TextBlock Text="{Binding IsEnabled, Converter={StaticResource StatusText}}"
-                                                                   FontSize="9" Foreground="White" FontWeight="SemiBold"/>
-                                                    </Border>
-                                                </Grid>
-                                            </Border>
-
-                                            <!-- Card body -->
-                                            <StackPanel Grid.Row="1" Margin="12,8">
-                                                <TextBlock Text="{Binding Name}" FontSize="13"
-                                                           FontWeight="SemiBold" Foreground="#EAEAEA"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           MaxHeight="36" LineHeight="18"/>
-                                                <TextBlock Text="{Binding Author, TargetNullValue='Unknown'}"
-                                                           FontSize="11" Foreground="#555577"
-                                                           Margin="0,2,0,0"/>
-                                                <TextBlock Text="{Binding SizeBytes, Converter={StaticResource BytesSize}}"
-                                                           FontSize="10" Foreground="#444466"
-                                                           Margin="0,2,0,0"/>
-                                            </StackPanel>
-
-                                            <!-- Card footer -->
-                                            <Border Grid.Row="2" Padding="8,6"
-                                                    BorderBrush="#1E1E3E" BorderThickness="0,1,0,0">
-                                                <Grid>
-                                                    <TextBlock Text="{Binding Version, TargetNullValue='v1.0'}"
-                                                               FontSize="10" Foreground="#555577"/>
-                                                    <TextBlock Text="{Binding IsSymlinked, StringFormat='🔗 {0}'}"
-                                                               FontSize="10" Foreground="#555577"
-                                                               HorizontalAlignment="Right"/>
-                                                </Grid>
-                                            </Border>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Type" FontSize="11" Foreground="#555577"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMod.ModType}" FontSize="12" Foreground="#C0C0E0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Version" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMod.Version, TargetNullValue='-'}" FontSize="12" Foreground="#C0C0E0" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Author" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMod.Author, TargetNullValue='-'}" FontSize="12" Foreground="#C0C0E0" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Size" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedMod.SizeBytes, Converter={StaticResource BytesSize}}" FontSize="12" Foreground="#C0C0E0" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Status" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="4" Grid.Column="1" FontSize="12" Foreground="#C0C0E0" Margin="0,6,0,0">
+                                                <Run Text="{Binding SelectedMod.IsEnabled, Converter={StaticResource StatusText}}"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Symlink" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
+                                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedMod.IsSymlinked}" FontSize="12" Foreground="#C0C0E0" Margin="0,6,0,0"/>
                                         </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-
-                    <!-- Detail Panel -->
-                    <Border Grid.Column="1" Margin="0,16,16,16"
-                            Background="#161630" CornerRadius="12"
-                            BorderBrush="#1E1E3E" BorderThickness="1" Padding="20">
-                        <StackPanel DataContext="{Binding SelectedMod}">
-                            <!-- Header with close/thumbs -->
-                            <Grid>
-                                <TextBlock Text="Mod Details" FontSize="11"
-                                           Foreground="#555577" FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-                            </Grid>
-
-                            <Border Background="#1A1A3E" CornerRadius="10" Margin="0,12,0,0"
-                                    Padding="16" MinHeight="200">
-                                <StackPanel VerticalAlignment="Top">
-                                    <TextBlock Text="{Binding Name, TargetNullValue='Select a mod'}"
-                                               FontSize="16" FontWeight="Bold" Foreground="#EAEAEA"
-                                               TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding FileName}" FontSize="11"
-                                               Foreground="#444466" Margin="0,4,0,12"/>
-
-                                    <Separator Background="#1E1E3E" Margin="0,0,0,12"/>
-
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="80"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0"
-                                                   Text="Type" FontSize="11" Foreground="#555577"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1"
-                                                   Text="{Binding ModType}" FontSize="12" Foreground="#C0C0E0"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0"
-                                                   Text="Version" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1"
-                                                   Text="{Binding Version, TargetNullValue='-'}" FontSize="12"
-                                                   Foreground="#C0C0E0" Margin="0,6,0,0"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0"
-                                                   Text="Author" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1"
-                                                   Text="{Binding Author, TargetNullValue='-'}" FontSize="12"
-                                                   Foreground="#C0C0E0" Margin="0,6,0,0"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0"
-                                                   Text="Size" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1"
-                                                   Text="{Binding SizeBytes, Converter={StaticResource BytesSize}}" FontSize="12"
-                                                   Foreground="#C0C0E0" Margin="0,6,0,0"/>
-
-                                        <TextBlock Grid.Row="4" Grid.Column="0"
-                                                   Text="Status" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="4" Grid.Column="1" FontSize="12"
-                                                   Foreground="#C0C0E0" Margin="0,6,0,0">
-                                            <Run Text="{Binding IsEnabled, Converter={StaticResource StatusText}}"/>
-                                        </TextBlock>
-
-                                        <TextBlock Grid.Row="5" Grid.Column="0"
-                                                   Text="Symlink" FontSize="11" Foreground="#555577" Margin="0,6,0,0"/>
-                                        <TextBlock Grid.Row="5" Grid.Column="1"
-                                                   Text="{Binding IsSymlinked}" FontSize="12"
-                                                   Foreground="#C0C0E0" Margin="0,6,0,0"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Action buttons -->
-                            <StackPanel Margin="0,12,0,0" DataContext="{Binding SelectedMod}">
-                                <Button Style="{StaticResource PrimaryButton}"
-                                        Command="{Binding DataContext.ToggleModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding}" HorizontalAlignment="Stretch">
+                                    </StackPanel>
+                                </Border>
+                                <Button Command="{Binding ToggleModCommand}"
+                                        CommandParameter="{Binding SelectedMod}"
+                                        Background="#E94560" Foreground="White" BorderThickness="0"
+                                        Padding="16,8" FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                                        HorizontalAlignment="Stretch" Margin="0,12,0,0">
                                     <TextBlock>
-                                        <Run Text="{Binding IsEnabled, Converter={StaticResource ToggleText}}"/>
+                                        <Run Text="{Binding SelectedMod.IsEnabled, Converter={StaticResource ToggleText}}"/>
                                         <Run Text=" Mod"/>
                                     </TextBlock>
                                 </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Margin="0,8,0,0"
-                                        Command="{Binding DataContext.DeleteModCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding}" HorizontalAlignment="Stretch"
-                                        Foreground="#E74C3C" Content="Delete Mod"/>
+                                <Button Command="{Binding DeleteModCommand}"
+                                        CommandParameter="{Binding SelectedMod}"
+                                        Background="#1E1E3A" Foreground="#E74C3C" BorderBrush="#2A2A4A"
+                                        BorderThickness="1" Padding="14,7" FontSize="12" Cursor="Hand"
+                                        HorizontalAlignment="Stretch" Margin="0,8,0,0" Content="Delete Mod"/>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </Grid>
+
+                    <ContentControl Content="{Binding SettingsView}" Visibility="{Binding IsSettingsViewVisible, Converter={StaticResource BoolVis}}"/>
+                    <ContentControl Content="{Binding BrowseView}" Visibility="{Binding IsBrowseViewVisible, Converter={StaticResource BoolVis}}"/>
                 </Grid>
+            </Border>
+        </Grid>
 
-                <!-- Settings View -->
-                <ContentControl Content="{Binding SettingsView}" Visibility="{Binding IsSettingsViewVisible}"/>
-                <ContentControl Content="{Binding BrowseView}" Visibility="{Binding IsBrowseViewVisible}"/>
-            </Grid>
-        </Border>
-    </Grid>
-
-    <Border Grid.Row="2" Background="#0A0A1A"
-                BorderBrush="#1E1E3E" BorderThickness="0,1,0,0" Padding="16,0">
+        <!-- STATUS BAR -->
+        <Border Grid.Row="2" Background="#0A0A1A" BorderBrush="#1E1E3E" BorderThickness="0,1,0,0" Padding="16,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-
                 <TextBlock Grid.Column="0" Foreground="#555577" FontSize="11">
                     <Run Text="{Binding ModCount}"/><Run Text=" mods installed"/>
                 </TextBlock>
-
                 <TextBlock Grid.Column="1" Foreground="#555577" FontSize="11"
                            HorizontalAlignment="Center" Text="{Binding StatusText}"/>
-
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBlock Foreground="#E94560" FontSize="11" FontWeight="SemiBold"
                                Visibility="{Binding IsEditorAvailable, Converter={StaticResource BoolVis}}"
