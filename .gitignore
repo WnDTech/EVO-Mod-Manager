@@ -1,0 +1,45 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+*.userprefs
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+dist/
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/packages.lock.json
+
+## Visual Studio
+.vs/
+*.sln.ide/
+*.ide/
+*.opensdf
+*.sdf
+*.cache
+*~
+*.swp
+
+## JetBrains Rider
+.idea/
+*.sln.iml
+
+## Serilog
+*.log
+logs/
