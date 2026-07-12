@@ -1,6 +1,6 @@
 using System.ServiceModel.Syndication;
+using System.Text.Json;
 using System.Xml;
-using AngleSharp;
 using Serilog;
 using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
@@ -10,7 +10,6 @@ namespace EVO.ModManager.Core.Services.Implementations;
 public class ModBrowserService : IModBrowserService
 {
     private static readonly ILogger Log = Serilog.Log.ForContext<ModBrowserService>();
-
     private static readonly HttpClient HttpClient = new(new HttpClientHandler
     {
         AllowAutoRedirect = true,
@@ -19,13 +18,14 @@ public class ModBrowserService : IModBrowserService
     });
 
     private readonly Dictionary<string, (List<DownloadableMod> Mods, DateTime Fetched)> _cache = new();
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(30);
 
     public ModBrowserService()
     {
-        HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-        HttpClient.DefaultRequestHeaders.Accept.ParseAdd("application/rss+xml, application/xml, text/html");
-        HttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.5");
+        HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("EVO-Mod-Manager/1.0");
+        HttpClient.DefaultRequestHeaders.Accept.ParseAdd("application/rss+xml, application/xml, text/html, */*");
+        HttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+        HttpClient.Timeout = TimeSpan.FromSeconds(15);
     }
 
     public Task<List<ModSource>> GetSourcesAsync()
@@ -36,56 +36,41 @@ public class ModBrowserService : IModBrowserService
     public async Task<List<DownloadableMod>> FetchModListAsync(string sourceId, ModType? category = null,
         CancellationToken ct = default)
     {
-        // Check cache
         if (_cache.TryGetValue(sourceId, out var cached) && DateTime.UtcNow - cached.Fetched < CacheTtl)
             return FilterByCategory(cached.Mods, category);
 
         var source = ModSource.Defaults.FirstOrDefault(s => s.Id == sourceId);
-        if (source == null)
-        {
-            Log.Warning("Unknown mod source: {SourceId}", sourceId);
-            return new List<DownloadableMod>();
-        }
+        if (source == null) return new List<DownloadableMod>();
 
         List<DownloadableMod>? mods = null;
 
-        // Try RSS feed first
-        if (!string.IsNullOrEmpty(source.RssFeedUrl))
-            mods = await TryFetchRssAsync(source.RssFeedUrl, ct);
-
-        // Fallback: scrape the downloads page
-        if ((mods == null || mods.Count == 0) && !string.IsNullOrEmpty(source.DownloadPageUrl))
-            mods = await TryScrapeDownloadsPageAsync(source.DownloadPageUrl, ct);
+        if (source.SourceType == "rss")
+            mods = await FetchFromRssAsync(source.RssFeedUrl, ct);
+        else if (source.SourceType == "json")
+            mods = await FetchFromJsonRepoAsync(source.DownloadPageUrl, ct);
 
         if (mods != null && mods.Count > 0)
         {
             _cache[sourceId] = (mods, DateTime.UtcNow);
-            Log.Information("Fetched {Count} mods from {Source}", mods.Count, source.Name);
+            Log.Information("Fetched {Count} mods from {Name}", mods.Count, source.Name);
             return FilterByCategory(mods, category);
         }
 
-        Log.Warning("No mods fetched from {Source}", source.Name);
-        return _cache.TryGetValue(sourceId, out var old) ? FilterByCategory(old.Mods, category) : new List<DownloadableMod>();
+        return _cache.TryGetValue(sourceId, out var old)
+            ? FilterByCategory(old.Mods, category)
+            : new List<DownloadableMod>();
     }
 
-    private async Task<List<DownloadableMod>?> TryFetchRssAsync(string feedUrl, CancellationToken ct)
+    private async Task<List<DownloadableMod>?> FetchFromRssAsync(string feedUrl, CancellationToken ct)
     {
         try
         {
             using var response = await HttpClient.GetAsync(feedUrl, ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                Log.Warning("RSS feed {Url} returned {Status}", feedUrl, response.StatusCode);
-                return null;
-            }
+            if (!response.IsSuccessStatusCode) return null;
 
             var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
-            if (!contentType.Contains("xml", StringComparison.OrdinalIgnoreCase) &&
-                !contentType.Contains("rss", StringComparison.OrdinalIgnoreCase))
-            {
-                Log.Warning("RSS feed {Url} returned non-XML content type: {Type}", feedUrl, contentType);
+            if (!contentType.Contains("xml", StringComparison.OrdinalIgnoreCase))
                 return null;
-            }
 
             using var stream = await response.Content.ReadAsStreamAsync(ct);
             using var reader = XmlReader.Create(stream);
@@ -97,136 +82,57 @@ public class ModBrowserService : IModBrowserService
             {
                 ct.ThrowIfCancellationRequested();
                 var category = item.Categories?.FirstOrDefault()?.Name ?? "";
+                var title = item.Title?.Text ?? "";
 
-                // Filter: only AC EVO mods
-                if (!category.Contains("Assetto Corsa Evo", StringComparison.OrdinalIgnoreCase) &&
-                    !category.Contains("ACE", StringComparison.OrdinalIgnoreCase) &&
-                    !item.Title?.Text?.Contains("evo", StringComparison.OrdinalIgnoreCase) == true)
+                if (!IsAceEvoRelated(category, title))
                     continue;
 
                 var downloadUrl = ExtractDownloadUrl(item);
 
                 mods.Add(new DownloadableMod
                 {
-                    Title = item.Title?.Text ?? "Unknown",
+                    Title = title,
                     Author = item.Authors?.FirstOrDefault()?.Name,
                     Published = item.PublishDate.DateTime,
                     Category = category,
                     DownloadUrl = downloadUrl,
                     ResourceId = ExtractResourceId(downloadUrl),
                     Description = StripHtml(item.Content?.ToString() ?? item.Summary?.Text ?? ""),
-                    ModType = ClassifyFromCategory(category)
+                    ModType = ClassifyFromCategory(category, title)
                 });
             }
-
-            if (mods.Count > 0)
-                Log.Information("RSS feed {Url}: found {Count} mods", feedUrl, mods.Count);
 
             return mods;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Failed to parse RSS feed {Url}", feedUrl);
+            Log.Warning(ex, "RSS fetch failed for {Url}", feedUrl);
             return null;
         }
     }
 
-    private async Task<List<DownloadableMod>?> TryScrapeDownloadsPageAsync(string url, CancellationToken ct)
+    private async Task<List<DownloadableMod>?> FetchFromJsonRepoAsync(string repoUrl, CancellationToken ct)
     {
         try
         {
-            using var response = await HttpClient.GetAsync(url, ct);
-            if (!response.IsSuccessStatusCode)
+            var json = await HttpClient.GetStringAsync(repoUrl, ct);
+            var mods = JsonSerializer.Deserialize<List<JsonRepoEntry>>(json);
+            if (mods == null) return null;
+
+            return mods.Select(m => new DownloadableMod
             {
-                Log.Warning("Scrape page returned {Status}", response.StatusCode);
-                return null;
-            }
-
-            var html = await response.Content.ReadAsStringAsync(ct);
-
-            // Detect Cloudflare/JS challenge pages
-            if (html.Contains("Checking your browser", StringComparison.OrdinalIgnoreCase) ||
-                html.Contains("cf-browser-verification", StringComparison.OrdinalIgnoreCase) ||
-                html.Contains("Just a moment", StringComparison.OrdinalIgnoreCase))
-            {
-                Log.Warning("Scrape blocked by JS challenge at {Url}", url);
-                return null;
-            }
-
-            // Parse with AngleSharp (no loader needed - we have the HTML)
-            var context = BrowsingContext.New(Configuration.Default);
-            var document = await context.OpenAsync(req => req.Content(html), ct);
-
-            var mods = new List<DownloadableMod>();
-
-            // Try multiple selector strategies for XenForo-based sites (OverTake.gg)
-            var entries = document.QuerySelectorAll(
-                "article[data-resource-id], " +
-                "div[data-resource-id], " +
-                ".resourceListItem, " +
-                ".resource-list--item, " +
-                ".structItem--resource, " +
-                "li[data-resource-id]");
-
-            // Fallback: try listing all links that point to /downloads/
-            if (entries.Length == 0)
-            {
-                entries = document.QuerySelectorAll("a[href*='/downloads/']");
-                // Filter to only parent links (not child breadcrumbs, categories)
-                var processed = new HashSet<string>();
-                foreach (var link in entries)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    var href = link.GetAttribute("href") ?? "";
-                    var title = link.TextContent?.Trim();
-                    if (string.IsNullOrEmpty(title) || title.Length < 3) continue;
-                    if (!href.Contains("/downloads/")) continue;
-                    if (processed.Contains(href)) continue;
-                    processed.Add(href);
-
-                    mods.Add(new DownloadableMod
-                    {
-                        Title = title,
-                        DownloadUrl = href,
-                        ResourceId = ExtractResourceId(href),
-                        ModType = ClassifyFromCategory(title)
-                    });
-                }
-            }
-            else
-            {
-                foreach (var entry in entries)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    var titleEl = entry.QuerySelector("h3 a, h2 a, .title a, a[href*='/downloads/']");
-                    var title = titleEl?.TextContent?.Trim();
-                    if (string.IsNullOrEmpty(title)) continue;
-
-                    var href = titleEl?.GetAttribute("href");
-                    var authorEl = entry.QuerySelector(".username, .resource-author a, .author a, [itemprop=author]");
-                    var author = authorEl?.TextContent?.Trim();
-                    var descEl = entry.QuerySelector(".description, .tagLine, [itemprop=description], p");
-                    var desc = descEl?.TextContent?.Trim();
-
-                    mods.Add(new DownloadableMod
-                    {
-                        Title = title,
-                        Author = author,
-                        DownloadUrl = href,
-                        ResourceId = ExtractResourceId(href),
-                        Description = desc,
-                        ModType = ClassifyFromCategory(title)
-                    });
-                }
-            }
-
-            Log.Information("Scraped {Count} mods from {Url} ({Strategy})",
-                mods.Count, url, entries.Length > 0 ? "structured" : "links-only");
-            return mods;
+                Title = m.Name,
+                Author = m.Author,
+                Description = m.Description,
+                DownloadUrl = m.DownloadUrl,
+                ResourceId = m.Id,
+                ModType = m.ModType,
+                Published = m.Created
+            }).ToList();
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Failed to scrape downloads page {Url}", url);
+            Log.Warning(ex, "JSON repo fetch failed for {Url}", repoUrl);
             return null;
         }
     }
@@ -243,69 +149,122 @@ public class ModBrowserService : IModBrowserService
             ? mod.DownloadUrl
             : $"https://www.overtake.gg{mod.DownloadUrl}";
 
-        // Resolve the actual download URL (mod page -> direct download link)
-        var downloadUrl = await ResolveDownloadUrlAsync(pageUrl, ct);
-        if (string.IsNullOrEmpty(downloadUrl))
-            throw new InvalidOperationException("Could not find download link on mod page");
+        // Strategy 1: Try direct download URL patterns first
+        var candidates = new List<string> { pageUrl };
 
-        Log.Information("Downloading {Title} from {Url}", mod.Title, downloadUrl);
-
-        using var response = await HttpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
-        response.EnsureSuccessStatusCode();
-
-        var totalBytes = response.Content.Headers.ContentLength ?? -1;
-        var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
-                       ?? $"{SanitizeFileName(mod.Title)}.zip";
-        var filePath = Path.Combine(downloadDir, fileName);
-
-        await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
-        await using var fileStream = File.Create(filePath);
-
-        if (totalBytes > 0)
+        if (mod.ResourceId != null)
         {
-            var buffer = new byte[8192];
-            long bytesRead = 0;
-            int read;
-            while ((read = await contentStream.ReadAsync(buffer, ct)) > 0)
-            {
-                await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
-                bytesRead += read;
-                progress?.Report((double)bytesRead / totalBytes);
-            }
+            candidates.Add($"https://www.overtake.gg/attachments/{mod.ResourceId}/download");
+            candidates.Add($"https://www.overtake.gg/attachments/{mod.ResourceId}-{SanitizeFileName(mod.Title)}.attach");
         }
-        else
+        // Add /download suffix
+        if (pageUrl.EndsWith("/"))
+            candidates.Add(pageUrl + "download");
+        else if (!pageUrl.EndsWith("/download"))
+            candidates.Add(pageUrl + "/download");
+
+        foreach (var url in candidates)
         {
-            await contentStream.CopyToAsync(fileStream, ct);
+            ct.ThrowIfCancellationRequested();
+            var result = await TryDirectDownloadAsync(url, downloadDir, mod.Title, progress, ct);
+            if (result != null) return result;
         }
 
-        Log.Information("Downloaded {Title} ({Size}) -> {Path}", mod.Title,
-            totalBytes > 0 ? $"{totalBytes / 1024.0:F1}KB" : "unknown", filePath);
-        return filePath;
+        // Strategy 2: Try to scrape the mod page for a direct download link
+        var scrapedUrl = await ScrapeDownloadUrlAsync(pageUrl, ct);
+        if (scrapedUrl != null)
+        {
+            var result = await TryDirectDownloadAsync(scrapedUrl, downloadDir, mod.Title, progress, ct);
+            if (result != null) return result;
+        }
+
+        // Strategy 3: Open in browser as last resort
+        Log.Warning("Automated download failed for {Title}, opening in browser", mod.Title);
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            UseShellExecute = true,
+            FileName = pageUrl
+        });
+
+        throw new InvalidOperationException(
+            $"OverTake.gg blocked the automated download.\n\n" +
+            $"The mod page has been opened in your browser.\n" +
+            $"Please download manually and drag the file into EVO Mod Manager.");
     }
 
-    private async Task<string?> ResolveDownloadUrlAsync(string pageUrl, CancellationToken ct)
+    private async Task<string?> TryDirectDownloadAsync(string url, string downloadDir, string modTitle,
+        IProgress<double>? progress, CancellationToken ct)
+    {
+        try
+        {
+            using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
+
+            // Skip if we got HTML (Cloudflare challenge or mod page)
+            if (contentType.Contains("html", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var totalBytes = response.Content.Headers.ContentLength ?? -1;
+
+            // Skip redirect pages or very small non-file responses
+            if (totalBytes == 0) return null;
+
+            var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                           ?? $"{SanitizeFileName(modTitle)}.zip";
+            var filePath = Path.Combine(downloadDir, fileName);
+
+            await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
+            await using var fileStream = File.Create(filePath);
+
+            if (totalBytes > 0)
+            {
+                var buffer = new byte[8192];
+                long bytesRead = 0;
+                int read;
+                while ((read = await contentStream.ReadAsync(buffer, ct)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
+                    bytesRead += read;
+                    progress?.Report((double)bytesRead / totalBytes);
+                }
+            }
+            else
+            {
+                await contentStream.CopyToAsync(fileStream, ct);
+            }
+
+            Log.Information("Downloaded {Title} ({Size}) from {Url}",
+                modTitle, totalBytes > 0 ? $"{totalBytes / 1024.0:F1}KB" : "unknown", url);
+            return filePath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<string?> ScrapeDownloadUrlAsync(string pageUrl, CancellationToken ct)
     {
         try
         {
             using var response = await HttpClient.GetAsync(pageUrl, ct);
             if (!response.IsSuccessStatusCode) return null;
 
-            var contentType = response.Content.Headers.ContentType?.MediaType ?? "";
-
-            // If it's already a direct download, return as-is
-            if (!contentType.Contains("html", StringComparison.OrdinalIgnoreCase))
-                return pageUrl;
-
             var html = await response.Content.ReadAsStringAsync(ct);
 
-            // Try common OverTake.gg download button patterns
+            // Check for Cloudflare/JS challenge
+            if (IsCloudflareBlock(html)) return null;
+
+            // Try to find attachment/download links
             var patterns = new[]
             {
-                @"href=""(/downloads/[^""]+/download)""",
                 @"href=""(/attachments/[^""]+)""",
-                @"data-url=""([^""]+download[^""]*)""",
-                @"class=""[^""]*overlayTrigger[^""]*""\s+href=""([^""]+)""",
-                @"class=""[^""]*downloadButton[^""]*""[^>]*href=""([^""]+)"""
+                @"href=""(/downloads/[^""]+/download)""",
+                @"data-resource-url=""([^""]+)""",
+                @"<a[^>]*class=""[^""]*button[^""]*""[^>]*href=""([^""]+download[^""]*)""",
+                @"<a[^>]*href=""([^""]+\.(zip|7z|rar|kspkg))""",
             };
 
             foreach (var pattern in patterns)
@@ -313,23 +272,36 @@ public class ModBrowserService : IModBrowserService
                 var match = System.Text.RegularExpressions.Regex.Match(html, pattern,
                     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
                 if (match.Success)
-                {
-                    var url = match.Groups[1].Value;
-                    if (!url.StartsWith("https://") && !url.StartsWith("http://"))
-                        url = $"https://www.overtake.gg{url}";
-                    Log.Information("Resolved download URL: {Url}", url);
-                    return url;
-                }
+                    return match.Groups[1].Value.StartsWith("http")
+                        ? match.Groups[1].Value
+                        : $"https://www.overtake.gg{match.Groups[1].Value}";
             }
+        }
+        catch { }
+        return null;
+    }
 
-            Log.Warning("No download link found on page: {Url}", pageUrl);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to resolve download URL for {Url}", pageUrl);
-            return null;
-        }
+    private static bool IsCloudflareBlock(string html) =>
+        html.Contains("Checking your browser", StringComparison.OrdinalIgnoreCase) ||
+        html.Contains("cf-browser-verification", StringComparison.OrdinalIgnoreCase) ||
+        html.Contains("challenge-platform", StringComparison.OrdinalIgnoreCase) ||
+        html.Contains("Just a moment", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsAceEvoRelated(string category, string title)
+    {
+        var lower = (category + " " + title).ToLowerInvariant();
+        // Broad filter: anything mentioning EVO, ACE modding, or AC content
+        return lower.Contains("assetto") ||
+               lower.Contains("evo") ||
+               lower.Contains("ace ") ||
+               lower.Contains("ace-") ||
+               lower.Contains("liverylab") ||
+               lower.Contains("evoforge") ||
+               lower.Contains("kspkg") ||
+               lower.Contains("mod") ||
+               lower.Contains("skin") ||
+               lower.Contains("car") ||
+               lower.Contains("track");
     }
 
     private static List<DownloadableMod> FilterByCategory(List<DownloadableMod> mods, ModType? category)
@@ -349,17 +321,17 @@ public class ModBrowserService : IModBrowserService
     private static string? ExtractResourceId(string? downloadUrl)
     {
         if (downloadUrl == null) return null;
-        var match = System.Text.RegularExpressions.Regex.Match(downloadUrl, @"\.(\d+)/$");
+        var match = System.Text.RegularExpressions.Regex.Match(downloadUrl, @"\.(\d+)/");
         return match.Success ? match.Groups[1].Value : null;
     }
 
-    private static ModType ClassifyFromCategory(string? categoryName)
+    private static ModType ClassifyFromCategory(string? categoryName, string? title)
     {
-        var lower = (categoryName ?? "").ToLowerInvariant();
+        var lower = ((categoryName ?? "") + " " + (title ?? "")).ToLowerInvariant();
         if (lower.Contains("car")) return ModType.Car;
-        if (lower.Contains("track")) return ModType.Track;
+        if (lower.Contains("track") || lower.Contains("circuit")) return ModType.Track;
         if (lower.Contains("skin") || lower.Contains("livery")) return ModType.Skin;
-        if (lower.Contains("sound")) return ModType.Sound;
+        if (lower.Contains("sound") || lower.Contains("audio")) return ModType.Sound;
         if (lower.Contains("app")) return ModType.App;
         return ModType.Misc;
     }
@@ -374,6 +346,17 @@ public class ModBrowserService : IModBrowserService
     {
         foreach (var c in Path.GetInvalidFileNameChars())
             name = name.Replace(c, '_');
-        return name;
+        return name.Length > 80 ? name[..80] : name;
+    }
+
+    private class JsonRepoEntry
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string? Author { get; set; }
+        public string? Description { get; set; }
+        public string DownloadUrl { get; set; } = "";
+        public ModType ModType { get; set; }
+        public DateTime Created { get; set; }
     }
 }

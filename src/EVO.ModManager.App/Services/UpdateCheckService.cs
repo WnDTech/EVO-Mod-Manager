@@ -28,6 +28,11 @@ public class UpdateCheckService
         try
         {
             var response = await Client.GetAsync(GitHubApiUrl);
+
+            // If no releases exist yet, just return silently
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return new UpdateInfo { HasUpdate = false };
+
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
