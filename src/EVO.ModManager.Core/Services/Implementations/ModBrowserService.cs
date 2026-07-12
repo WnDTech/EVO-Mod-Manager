@@ -1,7 +1,6 @@
 using System.ServiceModel.Syndication;
 using System.Xml;
 using AngleSharp;
-using AngleSharp.Dom;
 using Serilog;
 using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
@@ -19,7 +18,6 @@ public class ModBrowserService : IModBrowserService
         AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
     });
 
-    private static readonly IConfiguration AngleConfig = Configuration.Default.WithDefaultLoader();
     private readonly Dictionary<string, (List<DownloadableMod> Mods, DateTime Fetched)> _cache = new();
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(15);
 
@@ -137,48 +135,98 @@ public class ModBrowserService : IModBrowserService
     {
         try
         {
-            var html = await HttpClient.GetStringAsync(url, ct);
+            using var response = await HttpClient.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                Log.Warning("Scrape page returned {Status}", response.StatusCode);
+                return null;
+            }
 
-            var context = BrowsingContext.New(AngleConfig);
+            var html = await response.Content.ReadAsStringAsync(ct);
+
+            // Detect Cloudflare/JS challenge pages
+            if (html.Contains("Checking your browser", StringComparison.OrdinalIgnoreCase) ||
+                html.Contains("cf-browser-verification", StringComparison.OrdinalIgnoreCase) ||
+                html.Contains("Just a moment", StringComparison.OrdinalIgnoreCase))
+            {
+                Log.Warning("Scrape blocked by JS challenge at {Url}", url);
+                return null;
+            }
+
+            // Parse with AngleSharp (no loader needed - we have the HTML)
+            var context = BrowsingContext.New(Configuration.Default);
             var document = await context.OpenAsync(req => req.Content(html), ct);
 
             var mods = new List<DownloadableMod>();
-            var entries = document.QuerySelectorAll("article.resource-list--entry, .resource-list-item, [data-resource-id]");
 
-            foreach (var entry in entries)
+            // Try multiple selector strategies for XenForo-based sites (OverTake.gg)
+            var entries = document.QuerySelectorAll(
+                "article[data-resource-id], " +
+                "div[data-resource-id], " +
+                ".resourceListItem, " +
+                ".resource-list--item, " +
+                ".structItem--resource, " +
+                "li[data-resource-id]");
+
+            // Fallback: try listing all links that point to /downloads/
+            if (entries.Length == 0)
             {
-                ct.ThrowIfCancellationRequested();
-
-                var titleEl = entry.QuerySelector("h3 a, .resource-title a, a[href*='/downloads/']");
-                var title = titleEl?.TextContent?.Trim();
-                if (string.IsNullOrEmpty(title)) continue;
-
-                var href = titleEl?.GetAttribute("href");
-                var authorEl = entry.QuerySelector(".resource-author a, .username");
-                var author = authorEl?.TextContent?.Trim();
-                var descEl = entry.QuerySelector(".resource-description, .tagLine, p");
-                var desc = descEl?.TextContent?.Trim();
-
-                mods.Add(new DownloadableMod
+                entries = document.QuerySelectorAll("a[href*='/downloads/']");
+                // Filter to only parent links (not child breadcrumbs, categories)
+                var processed = new HashSet<string>();
+                foreach (var link in entries)
                 {
-                    Title = title,
-                    Author = author,
-                    DownloadUrl = href,
-                    ResourceId = ExtractResourceId(href),
-                    Description = desc,
-                    Category = "ACE Scraped",
-                    ModType = ClassifyFromCategory(title)
-                });
+                    ct.ThrowIfCancellationRequested();
+                    var href = link.GetAttribute("href") ?? "";
+                    var title = link.TextContent?.Trim();
+                    if (string.IsNullOrEmpty(title) || title.Length < 3) continue;
+                    if (!href.Contains("/downloads/")) continue;
+                    if (processed.Contains(href)) continue;
+                    processed.Add(href);
+
+                    mods.Add(new DownloadableMod
+                    {
+                        Title = title,
+                        DownloadUrl = href,
+                        ResourceId = ExtractResourceId(href),
+                        ModType = ClassifyFromCategory(title)
+                    });
+                }
+            }
+            else
+            {
+                foreach (var entry in entries)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var titleEl = entry.QuerySelector("h3 a, h2 a, .title a, a[href*='/downloads/']");
+                    var title = titleEl?.TextContent?.Trim();
+                    if (string.IsNullOrEmpty(title)) continue;
+
+                    var href = titleEl?.GetAttribute("href");
+                    var authorEl = entry.QuerySelector(".username, .resource-author a, .author a, [itemprop=author]");
+                    var author = authorEl?.TextContent?.Trim();
+                    var descEl = entry.QuerySelector(".description, .tagLine, [itemprop=description], p");
+                    var desc = descEl?.TextContent?.Trim();
+
+                    mods.Add(new DownloadableMod
+                    {
+                        Title = title,
+                        Author = author,
+                        DownloadUrl = href,
+                        ResourceId = ExtractResourceId(href),
+                        Description = desc,
+                        ModType = ClassifyFromCategory(title)
+                    });
+                }
             }
 
-            if (mods.Count > 0)
-                Log.Information("Scraped {Count} mods from downloads page", mods.Count);
-
+            Log.Information("Scraped {Count} mods from {Url} ({Strategy})",
+                mods.Count, url, entries.Length > 0 ? "structured" : "links-only");
             return mods;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Failed to scrape downloads page");
+            Log.Warning(ex, "Failed to scrape downloads page {Url}", url);
             return null;
         }
     }
