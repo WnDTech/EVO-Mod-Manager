@@ -15,7 +15,7 @@ public class UpdateInfo
 public class UpdateCheckService
 {
     private static readonly ILogger Log = Serilog.Log.ForContext<UpdateCheckService>();
-    private const string GitHubApiUrl = "https://api.github.com/repos/paul-io/EVO-Mod-Manager/releases/latest";
+    private const string GitHubApiUrl = "https://api.github.com/repos/WnDTech/EVO-Mod-Manager/releases/latest";
     private static readonly HttpClient Client = new();
 
     public UpdateCheckService()
