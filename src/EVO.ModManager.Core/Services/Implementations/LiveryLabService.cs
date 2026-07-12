@@ -11,6 +11,7 @@ public class LiveryLabService : ILiveryLabService
     private const string ToolsDir = "tools\\LiveryLab";
     private const string ExeName = "LiveryLab.exe";
     private static readonly HttpClient HttpClient = new();
+    private static bool _isDownloading;
 
     public string? LiveryLabPath { get; private set; }
 
@@ -26,43 +27,55 @@ public class LiveryLabService : ILiveryLabService
     public async Task AutoDownloadAsync(IProgress<double>? progress = null, CancellationToken ct = default)
     {
         if (IsInstalled) return;
-
-        var toolsBase = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "EVO Mod Manager", ToolsDir);
-        Directory.CreateDirectory(toolsBase);
-
-        var zipPath = Path.Combine(toolsBase, "LiveryLab_Portable.zip");
-
-        Log.Information("Downloading LiveryLab from {Url}", LiveryLabUrl);
-
-        using var response = await HttpClient.GetAsync(LiveryLabUrl, HttpCompletionOption.ResponseHeadersRead, ct);
-        response.EnsureSuccessStatusCode();
-
-        var totalBytes = response.Content.Headers.ContentLength ?? -1;
-        await using var contentStream = await response.Content.ReadAsStreamAsync(ct);
-        await using var fileStream = File.Create(zipPath);
-        await contentStream.CopyToAsync(fileStream, ct);
-
-        using var zipStream = File.OpenRead(zipPath);
-        using var archive = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(zipStream);
-        foreach (var entry in archive.Entries)
+        if (_isDownloading)
         {
-            if (!entry.IsDirectory && entry.Key != null)
+            Log.Warning("LiveryLab download already in progress");
+            return;
+        }
+
+        _isDownloading = true;
+        try
+        {
+            var toolsBase = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "EVO Mod Manager", ToolsDir);
+            Directory.CreateDirectory(toolsBase);
+
+            Log.Information("Downloading LiveryLab from {Url}", LiveryLabUrl);
+
+            using var response = await HttpClient.GetAsync(LiveryLabUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+            response.EnsureSuccessStatusCode();
+
+            // Extract directly from the HTTP stream without saving to a temp zip
+            using var responseStream = await response.Content.ReadAsStreamAsync(ct);
+            using var archive = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(responseStream);
+
+            var totalEntries = archive.Entries.Count(e => !e.IsDirectory);
+            var extracted = 0;
+
+            foreach (var entry in archive.Entries)
             {
+                ct.ThrowIfCancellationRequested();
+                if (entry.IsDirectory || entry.Key == null) continue;
+
                 var destPath = Path.Combine(toolsBase, entry.Key);
                 var destDir = Path.GetDirectoryName(destPath);
                 if (destDir != null) Directory.CreateDirectory(destDir);
+
                 using var entryStream = entry.OpenEntryStream();
                 using var destFile = File.Create(destPath);
                 await entryStream.CopyToAsync(destFile, ct);
+                extracted++;
+                progress?.Report((double)extracted / totalEntries);
             }
+
+            LiveryLabPath = DetectLiveryLab();
+            Log.Information("LiveryLab installed at {Path} ({Count} files)", LiveryLabPath, extracted);
         }
-
-        File.Delete(zipPath);
-
-        LiveryLabPath = DetectLiveryLab();
-        Log.Information("LiveryLab installed at {Path}", LiveryLabPath);
+        finally
+        {
+            _isDownloading = false;
+        }
     }
 
     public void LaunchWithZip(string zipPath)
