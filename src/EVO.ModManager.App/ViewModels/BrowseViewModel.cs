@@ -35,6 +35,9 @@ public partial class BrowseViewModel : ObservableObject
     private ObservableCollection<DownloadableMod> _mods = new();
 
     [ObservableProperty]
+    private ObservableCollection<ModSource> _sources = new();
+
+    [ObservableProperty]
     private DownloadableMod? _selectedMod;
 
     [ObservableProperty]
@@ -52,31 +55,55 @@ public partial class BrowseViewModel : ObservableObject
     [ObservableProperty]
     private ModType _selectedCategory = ModType.Unknown;
 
+    [ObservableProperty]
+    private ModSource? _selectedSource;
+
     public List<ModType> Categories { get; } = new()
     {
         ModType.Unknown, ModType.Car, ModType.Track, ModType.Skin,
         ModType.Sound, ModType.App, ModType.Misc
     };
 
+    partial void OnSelectedSourceChanged(ModSource? value)
+    {
+        if (value != null) _ = FetchModsAsync();
+    }
+
+    partial void OnSelectedCategoryChanged(ModType value)
+    {
+        _ = FetchModsAsync();
+    }
+
     public void SetModsFolder(string path) => _modsFolder = path;
+
+    [RelayCommand]
+    public async Task LoadSourcesAsync()
+    {
+        var sources = await _browserService.GetSourcesAsync();
+        Sources.Clear();
+        foreach (var s in sources)
+            Sources.Add(s);
+        SelectedSource = Sources.FirstOrDefault();
+    }
 
     [RelayCommand]
     public async Task FetchModsAsync()
     {
-        if (IsLoading) return;
+        if (IsLoading || SelectedSource == null) return;
         IsLoading = true;
-        StatusText = "Fetching mods from OverTake.gg...";
+        StatusText = $"Fetching mods from {SelectedSource.Name}...";
 
         try
         {
             var mods = await _browserService.FetchModListAsync(
+                SelectedSource.Id,
                 SelectedCategory == ModType.Unknown ? null : SelectedCategory);
 
             Mods.Clear();
             foreach (var mod in mods)
                 Mods.Add(mod);
 
-            StatusText = $"Found {mods.Count} mods";
+            StatusText = $"Found {mods.Count} mods from {SelectedSource.Name}";
         }
         catch (Exception ex)
         {
@@ -127,7 +154,6 @@ public partial class BrowseViewModel : ObservableObject
                 return;
             }
 
-            // Extract and install
             var extractDir = Path.Combine(tempDir, "extracted");
             await _archiveService.ExtractArchiveAsync(archivePath, extractDir);
 
@@ -168,7 +194,6 @@ public partial class BrowseViewModel : ObservableObject
 
             StatusText = $"Installed: {SelectedMod.Title}";
 
-            // Cleanup temp
             try { Directory.Delete(tempDir, recursive: true); } catch { }
         }
         catch (Exception ex)
@@ -179,10 +204,5 @@ public partial class BrowseViewModel : ObservableObject
         {
             IsDownloading = false;
         }
-    }
-
-    partial void OnSelectedCategoryChanged(ModType value)
-    {
-        _ = FetchModsAsync();
     }
 }

@@ -12,13 +12,6 @@ public class ModBrowserService : IModBrowserService
 {
     private static readonly ILogger Log = Serilog.Log.ForContext<ModBrowserService>();
 
-    private static readonly string[] FeedUrls =
-    {
-        "https://www.overtake.gg/forums/-/index.rss",
-        "https://www.overtake.gg/forums/assetto-corsa-evo-mods.752/-/index.rss?resource=1",
-        "https://www.overtake.gg/downloads/categories/assetto-corsa-evo.275/-/index.rss"
-    };
-
     private static readonly HttpClient HttpClient = new(new HttpClientHandler
     {
         AllowAutoRedirect = true,
@@ -27,8 +20,7 @@ public class ModBrowserService : IModBrowserService
     });
 
     private static readonly IConfiguration AngleConfig = Configuration.Default.WithDefaultLoader();
-    private DateTime _lastFetch = DateTime.MinValue;
-    private List<DownloadableMod>? _cache;
+    private readonly Dictionary<string, (List<DownloadableMod> Mods, DateTime Fetched)> _cache = new();
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(15);
 
     public ModBrowserService()
@@ -38,33 +30,44 @@ public class ModBrowserService : IModBrowserService
         HttpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.5");
     }
 
-    public async Task<List<DownloadableMod>> FetchModListAsync(ModType? category = null,
+    public Task<List<ModSource>> GetSourcesAsync()
+    {
+        return Task.FromResult(ModSource.Defaults);
+    }
+
+    public async Task<List<DownloadableMod>> FetchModListAsync(string sourceId, ModType? category = null,
         CancellationToken ct = default)
     {
-        if (_cache != null && DateTime.UtcNow - _lastFetch < CacheTtl)
-            return FilterByCategory(_cache, category);
+        // Check cache
+        if (_cache.TryGetValue(sourceId, out var cached) && DateTime.UtcNow - cached.Fetched < CacheTtl)
+            return FilterByCategory(cached.Mods, category);
+
+        var source = ModSource.Defaults.FirstOrDefault(s => s.Id == sourceId);
+        if (source == null)
+        {
+            Log.Warning("Unknown mod source: {SourceId}", sourceId);
+            return new List<DownloadableMod>();
+        }
 
         List<DownloadableMod>? mods = null;
 
-        foreach (var feedUrl in FeedUrls)
-        {
-            mods = await TryFetchRssAsync(feedUrl, ct);
-            if (mods != null && mods.Count > 0) break;
-        }
+        // Try RSS feed first
+        if (!string.IsNullOrEmpty(source.RssFeedUrl))
+            mods = await TryFetchRssAsync(source.RssFeedUrl, ct);
 
-        if (mods == null || mods.Count == 0)
-            mods = await TryScrapeDownloadsPageAsync(ct);
+        // Fallback: scrape the downloads page
+        if ((mods == null || mods.Count == 0) && !string.IsNullOrEmpty(source.DownloadPageUrl))
+            mods = await TryScrapeDownloadsPageAsync(source.DownloadPageUrl, ct);
 
         if (mods != null && mods.Count > 0)
         {
-            _cache = mods;
-            _lastFetch = DateTime.UtcNow;
-            Log.Information("Fetched {Count} mods from OverTake.gg", mods.Count);
+            _cache[sourceId] = (mods, DateTime.UtcNow);
+            Log.Information("Fetched {Count} mods from {Source}", mods.Count, source.Name);
             return FilterByCategory(mods, category);
         }
 
-        Log.Warning("No mods fetched from any source, returning cache or empty");
-        return _cache ?? new List<DownloadableMod>();
+        Log.Warning("No mods fetched from {Source}", source.Name);
+        return _cache.TryGetValue(sourceId, out var old) ? FilterByCategory(old.Mods, category) : new List<DownloadableMod>();
     }
 
     private async Task<List<DownloadableMod>?> TryFetchRssAsync(string feedUrl, CancellationToken ct)
@@ -130,11 +133,10 @@ public class ModBrowserService : IModBrowserService
         }
     }
 
-    private async Task<List<DownloadableMod>?> TryScrapeDownloadsPageAsync(CancellationToken ct)
+    private async Task<List<DownloadableMod>?> TryScrapeDownloadsPageAsync(string url, CancellationToken ct)
     {
         try
         {
-            var url = "https://www.overtake.gg/downloads/categories/assetto-corsa-evo.275/";
             var html = await HttpClient.GetStringAsync(url, ct);
 
             var context = BrowsingContext.New(AngleConfig);

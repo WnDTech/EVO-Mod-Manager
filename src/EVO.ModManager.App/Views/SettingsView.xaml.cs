@@ -1,4 +1,3 @@
-using System.Windows.Controls;
 using EVO.ModManager.App.ViewModels;
 
 namespace EVO.ModManager.App.Views;

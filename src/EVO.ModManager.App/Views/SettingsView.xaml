@@ -4,101 +4,80 @@
              xmlns:conv="clr-namespace:EVO.ModManager.App.Converters">
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
+        <conv:BytesToSizeConverter x:Key="BytesSize"/>
     </UserControl.Resources>
-    <ScrollViewer>
+    <ScrollViewer Background="Transparent" BorderThickness="0">
         <StackPanel Margin="16">
-            <TextBlock Text="Settings" FontSize="20" FontWeight="Bold"
-                       Foreground="{StaticResource AccentBrush}" Margin="0,0,0,16"/>
+            <TextBlock Text="Settings" FontSize="18" FontWeight="Bold" Foreground="#E94560" Margin="0,0,0,16"/>
 
-            <Border Background="{StaticResource BgSurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,16">
+            <Border Background="#141430" BorderBrush="#1E1E40" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="Game Paths" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-
+                    <TextBlock Text="Game Paths" FontSize="13" FontWeight="SemiBold" Foreground="#DDDDF0" Margin="0,0,0,8"/>
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="120"/><ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Game:" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GamePath}" FontSize="12"
-                                   Margin="8,0,0,4"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="ACE Folder:" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AcePath}" FontSize="12"
-                                   Margin="8,0,0,4"/>
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Editor SDK:" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SdkStatus}" FontSize="12"
-                                   TextWrapping="Wrap" Margin="8,0,0,4"/>
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="LiveryLab:" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Game:" FontSize="11" Foreground="#555580" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GamePath}" FontSize="11" Foreground="#BBBBE0" Margin="8,0,0,4"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="ACE Folder:" FontSize="11" Foreground="#555580" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AcePath}" FontSize="11" Foreground="#BBBBE0" Margin="8,0,0,4"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Editor SDK:" FontSize="11" Foreground="#555580" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SdkStatus}" FontSize="11" Foreground="#BBBBE0" TextWrapping="Wrap" Margin="8,0,0,4"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="LiveryLab:" FontSize="11" Foreground="#555580" VerticalAlignment="Center"/>
                         <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
-                            <TextBlock Text="{Binding LiveryLabStatus}" FontSize="12" TextWrapping="Wrap"
-                                       VerticalAlignment="Center"/>
-                            <Button Command="{Binding DownloadLiveryLabCommand}"
-                                    Content="Download" Margin="8,0,0,0"
-                                    FontSize="12" Padding="8,2"/>
+                            <TextBlock Text="{Binding LiveryLabStatus}" FontSize="11" Foreground="#BBBBE0" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            <Button Command="{Binding DownloadLiveryLabCommand}" Content="Download"
+                                    Background="#1E1E40" Foreground="#BBBBE0" BorderBrush="#2E2E58"
+                                    BorderThickness="1" Padding="8,3" FontSize="10" Cursor="Hand" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
 
-            <Border Background="{StaticResource BgSurfaceBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="6" Padding="16" Margin="0,0,0,16">
+            <Border Background="#141430" BorderBrush="#1E1E40" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="Storage Locations" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                    <TextBlock Text="Mods installed to external drives use symbolic links. The actual mod files stay on the storage drive, and the game sees them as if they were in the mods folder."
-                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <TextBlock Text="Storage Locations" FontSize="13" FontWeight="SemiBold" Foreground="#DDDDF0" Margin="0,0,0,6"/>
+                    <TextBlock Text="Mods installed to external drives use symbolic links. The actual mod files stay on the storage drive."
+                               FontSize="10" Foreground="#555580" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
                     <ItemsControl ItemsSource="{Binding StorageLocations}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{StaticResource BgDarkBrush}" CornerRadius="4"
-                                        Padding="12" Margin="0,0,0,6">
+                                <Border Background="#181838" CornerRadius="6" Padding="10" Margin="0,0,0,6">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                                <Border Background="{StaticResource SuccessBrush}"
-                                                        CornerRadius="3" Padding="4,1" Margin="8,0,0,0"
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" Foreground="#DDDDF0"/>
+                                                <Border Background="#2ECC71" CornerRadius="2" Padding="3,1" Margin="6,0,0,0"
                                                         Visibility="{Binding IsDefault, Converter={StaticResource BoolVis}}">
-                                                    <TextBlock Text="Default" FontSize="10" Foreground="White"/>
+                                                    <TextBlock Text="Default" FontSize="8" Foreground="White"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding Path}" FontSize="11"
-                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding FreeSpace, StringFormat='Free: {0}'}"
-                                                       FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#555580"/>
+                                            <TextBlock Text="{Binding FreeSpace, StringFormat=Free: {0}}" FontSize="10" Foreground="#555580"/>
                                         </StackPanel>
-                                        <Button Grid.Column="1" Content="Set Default" FontSize="11"
-                                                Padding="8,4" Margin="4,0"
+                                        <Button Grid.Column="1" Content="Set Default" FontSize="10"
+                                                Padding="6,3" Margin="4,0"
+                                                Background="#1E1E40" Foreground="#BBBBE0" BorderBrush="#2E2E58"
+                                                BorderThickness="1" Cursor="Hand"
                                                 Command="{Binding DataContext.SetDefaultLocationCommand,
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding Id}"/>
-                                        <Button Grid.Column="2" Content="Remove" FontSize="11"
-                                                Padding="8,4" Margin="4,0"
-                                                Background="{StaticResource DangerBrush}"
+                                        <Button Grid.Column="2" Content="Remove" FontSize="10"
+                                                Padding="6,3" Margin="4,0"
+                                                Background="#2E1E1E" Foreground="#E06060" BorderBrush="#3E2E2E"
+                                                BorderThickness="1" Cursor="Hand"
                                                 Command="{Binding DataContext.RemoveLocationCommand,
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding Id}"/>
@@ -108,41 +87,35 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <Separator Margin="0,12" Opacity="0.3"/>
+                    <Separator Background="#1E1E40" Margin="0,10,0,10" Opacity="0.5"/>
 
-                    <TextBlock Text="Add New Storage Location" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Add New Storage" FontSize="12" FontWeight="SemiBold" Foreground="#DDDDF0" Margin="0,0,0,6"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontSize="11" Foreground="#555580" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NewLocationName, Mode=TwoWay}"
-                                 Margin="8,0,0,4"/>
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Path:" FontSize="12"
-                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                 Background="#1E1E40" Foreground="#BBBBE0" BorderBrush="#2E2E58"
+                                 BorderThickness="1" Padding="6,3" FontSize="11" Margin="6,0,0,4"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Path:" FontSize="11" Foreground="#555580" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewLocationPath, Mode=TwoWay}"
-                                 Margin="8,0,0,4"/>
+                                 Background="#1E1E40" Foreground="#BBBBE0" BorderBrush="#2E2E58"
+                                 BorderThickness="1" Padding="6,3" FontSize="11" Margin="6,0,0,4"/>
                         <Button Grid.Row="1" Grid.Column="2" Command="{Binding BrowseLocationCommand}"
-                                Content="Browse..." Margin="4,0,0,4" Padding="8,2"/>
-
+                                Content="Browse..." Background="#1E1E40" Foreground="#BBBBE0"
+                                BorderBrush="#2E2E58" BorderThickness="1" Padding="8,3" FontSize="10"
+                                Cursor="Hand" Margin="4,0,0,4"/>
                         <Button Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                                Command="{Binding AddLocationCommand}"
-                                Content="Add Location" Margin="8,4,0,0"
-                                Style="{StaticResource AccentButton}" HorizontalAlignment="Left"/>
+                                Command="{Binding AddLocationCommand}" Content="Add Location"
+                                Background="#E94560" Foreground="White" BorderThickness="0"
+                                Padding="10,5" FontSize="11" FontWeight="SemiBold" Cursor="Hand"
+                                HorizontalAlignment="Left" Margin="6,4,0,0"/>
                     </Grid>
-
-                    <TextBlock Text="{Binding StatusMessage}" FontSize="12"
-                               Foreground="{StaticResource SuccessBrush}" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="10" Foreground="#2ECC71" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -1,4 +1,3 @@
-using System.Windows.Controls;
 using EVO.ModManager.App.ViewModels;
 
 namespace EVO.ModManager.App.Views;
@@ -11,6 +10,7 @@ public partial class BrowseView : System.Windows.Controls.UserControl
         DataContext = viewModel;
         Loaded += async (s, e) =>
         {
+            await viewModel.LoadSourcesCommand.ExecuteAsync(null);
             if (viewModel.FetchModsCommand.CanExecute(null))
                 await viewModel.FetchModsCommand.ExecuteAsync(null);
         };
