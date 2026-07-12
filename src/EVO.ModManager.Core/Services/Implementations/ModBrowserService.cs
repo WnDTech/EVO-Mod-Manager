@@ -290,18 +290,22 @@ public class ModBrowserService : IModBrowserService
     private static bool IsAceEvoRelated(string category, string title)
     {
         var lower = (category + " " + title).ToLowerInvariant();
-        // Broad filter: anything mentioning EVO, ACE modding, or AC content
-        return lower.Contains("assetto") ||
-               lower.Contains("evo") ||
-               lower.Contains("ace ") ||
-               lower.Contains("ace-") ||
-               lower.Contains("liverylab") ||
-               lower.Contains("evoforge") ||
-               lower.Contains("kspkg") ||
-               lower.Contains("mod") ||
-               lower.Contains("skin") ||
-               lower.Contains("car") ||
-               lower.Contains("track");
+
+        // Must mention EVO or ACE to be an Assetto Corsa EVO mod
+        var mentionsEvo = lower.Contains("assetto corsa evo") ||
+                          lower.Contains("ace evo") ||
+                          lower.Contains("ace car") ||
+                          lower.Contains("ace skin") ||
+                          lower.Contains("ace app") ||
+                          lower.Contains("ace track") ||
+                          lower.Contains("ace sound") ||
+                          lower.Contains("ace misc");
+
+        // Exclude other sims
+        var isOtherSim = lower.Contains("assetto corsa ") &&
+                         !lower.Contains("assetto corsa evo");
+
+        return mentionsEvo && !isOtherSim;
     }
 
     private static List<DownloadableMod> FilterByCategory(List<DownloadableMod> mods, ModType? category)
