@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Mpf+xU4elaM=",
+  "dgSpecHash": "LCR8jEAQNG4=",
   "success": true,
   "projectFilePath": "C:\\Users\\paul_\\OneDrive\\Documents\\APP\\EVO Mod Manager\\tests\\EVO.ModManager.Tests\\EVO.ModManager.Tests.csproj",
   "expectedPackageFiles": [
@@ -25,9 +25,12 @@
     "C:\\Users\\paul_\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
+    "C:\\Users\\paul_\\.nuget\\packages\\syroot.binarydata.core\\5.2.0\\syroot.binarydata.core.5.2.0.nupkg.sha512",
+    "C:\\Users\\paul_\\.nuget\\packages\\syroot.binarydata.memory\\5.2.2\\syroot.binarydata.memory.5.2.2.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\system.diagnostics.eventlog\\6.0.0\\system.diagnostics.eventlog.6.0.0.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\system.reflection.metadata\\1.6.0\\system.reflection.metadata.1.6.0.nupkg.sha512",
+    "C:\\Users\\paul_\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.5.2\\system.runtime.compilerservices.unsafe.4.5.2.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\system.servicemodel.syndication\\10.0.9\\system.servicemodel.syndication.10.0.9.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\xunit\\2.9.2\\xunit.2.9.2.nupkg.sha512",
     "C:\\Users\\paul_\\.nuget\\packages\\xunit.abstractions\\2.0.3\\xunit.abstractions.2.0.3.nupkg.sha512",

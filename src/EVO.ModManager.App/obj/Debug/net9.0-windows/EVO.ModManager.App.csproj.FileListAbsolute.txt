@@ -82,3 +82,6 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x64\native\libSkiaSharp.pdb
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x86\native\libSkiaSharp.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x86\native\libSkiaSharp.pdb
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Syroot.BinaryData.Core.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Syroot.BinaryData.Memory.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\ACEvo.Package.dll

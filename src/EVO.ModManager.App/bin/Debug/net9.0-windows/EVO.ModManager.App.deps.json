@@ -317,7 +317,29 @@
           }
         }
       },
+      "Syroot.BinaryData.Core/5.2.0": {
+        "runtime": {
+          "lib/netcoreapp2.1/Syroot.BinaryData.Core.dll": {
+            "assemblyVersion": "5.2.0.0",
+            "fileVersion": "5.2.0.0"
+          }
+        }
+      },
+      "Syroot.BinaryData.Memory/5.2.2": {
+        "dependencies": {
+          "Syroot.BinaryData.Core": "5.2.0",
+          "System.Memory": "4.5.3",
+          "System.Runtime.CompilerServices.Unsafe": "4.5.2"
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/Syroot.BinaryData.Memory.dll": {
+            "assemblyVersion": "5.2.2.0",
+            "fileVersion": "5.2.2.0"
+          }
+        }
+      },
       "System.Memory/4.5.3": {},
+      "System.Runtime.CompilerServices.Unsafe/4.5.2": {},
       "System.ServiceModel.Syndication/10.0.9": {
         "runtime": {
           "lib/net9.0/System.ServiceModel.Syndication.dll": {
@@ -334,10 +356,19 @@
           "Serilog": "4.4.0",
           "SharpCompress": "0.49.1",
           "SkiaSharp": "4.150.1",
+          "Syroot.BinaryData.Memory": "5.2.2",
           "System.ServiceModel.Syndication": "10.0.9"
         },
         "runtime": {
           "EVO.ModManager.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "ACEvo.Package/1.0.0.0": {
+        "runtime": {
+          "ACEvo.Package.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -470,12 +501,33 @@
       "path": "sqlitepclraw.provider.e_sqlite3/2.1.11",
       "hashPath": "sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512"
     },
+    "Syroot.BinaryData.Core/5.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zMrTKIa+zwvFqkahbDdCzGW0Jq7BVE44gzuK0OT0ia+DpRtZTcwqOzSMiLs7Z2urY9vMqh5yTMLGVUal0dkQAA==",
+      "path": "syroot.binarydata.core/5.2.0",
+      "hashPath": "syroot.binarydata.core.5.2.0.nupkg.sha512"
+    },
+    "Syroot.BinaryData.Memory/5.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SZhuJbqrXrECebYwWIRfuvWAlw0wcEvpM98ZDdMl0JSwgocvzGqFC7lP9j8oeeHjmNxOJ+cxNH3wVkGNwf0Q9A==",
+      "path": "syroot.binarydata.memory/5.2.2",
+      "hashPath": "syroot.binarydata.memory.5.2.2.nupkg.sha512"
+    },
     "System.Memory/4.5.3": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-3oDzvc/zzetpTKWMShs1AADwZjQ/36HnsufHRPcOjyRAAMLDlu2iD33MBI2opxnezcVUtXyqDXXjoFMOU9c7SA==",
       "path": "system.memory/4.5.3",
       "hashPath": "system.memory.4.5.3.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/4.5.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-wprSFgext8cwqymChhrBLu62LMg/1u92bU+VOwyfBimSPVFXtsNqEWC92Pf9ofzJFlk4IHmJA75EDJn1b2goAQ==",
+      "path": "system.runtime.compilerservices.unsafe/4.5.2",
+      "hashPath": "system.runtime.compilerservices.unsafe.4.5.2.nupkg.sha512"
     },
     "System.ServiceModel.Syndication/10.0.9": {
       "type": "package",
@@ -486,6 +538,11 @@
     },
     "EVO.ModManager.Core/1.0.0": {
       "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ACEvo.Package/1.0.0.0": {
+      "type": "reference",
       "serviceable": false,
       "sha512": ""
     }

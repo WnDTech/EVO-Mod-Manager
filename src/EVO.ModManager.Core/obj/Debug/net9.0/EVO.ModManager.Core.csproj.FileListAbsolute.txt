@@ -11,3 +11,5 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\ob
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\refint\EVO.ModManager.Core.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.pdb
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\ref\EVO.ModManager.Core.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\bin\Debug\net9.0\ACEvo.Package.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModM.50667EFB.Up2Date

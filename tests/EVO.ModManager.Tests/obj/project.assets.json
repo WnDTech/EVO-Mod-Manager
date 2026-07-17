@@ -623,6 +623,37 @@
           "lib/net6.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
         }
       },
+      "Syroot.BinaryData.Core/5.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp2.1/Syroot.BinaryData.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/Syroot.BinaryData.Core.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Syroot.BinaryData.Memory/5.2.2": {
+        "type": "package",
+        "dependencies": {
+          "Syroot.BinaryData.Core": "5.2.0",
+          "System.Memory": "4.5.2",
+          "System.Runtime.CompilerServices.Unsafe": "4.5.2"
+        },
+        "compile": {
+          "lib/netcoreapp2.1/Syroot.BinaryData.Memory.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/Syroot.BinaryData.Memory.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "System.Diagnostics.EventLog/6.0.0": {
         "type": "package",
         "compile": {
@@ -667,6 +698,19 @@
         },
         "runtime": {
           "lib/netstandard2.0/System.Reflection.Metadata.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe/4.5.2": {
+        "type": "package",
+        "compile": {
+          "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {
             "related": ".xml"
           }
         }
@@ -793,6 +837,7 @@
           "Serilog": "4.4.0",
           "SharpCompress": "0.49.1",
           "SkiaSharp": "4.150.1",
+          "Syroot.BinaryData.Memory": "5.2.2",
           "System.ServiceModel.Syndication": "10.0.9"
         },
         "compile": {
@@ -1581,6 +1626,38 @@
         "sqlitepclraw.provider.e_sqlite3.nuspec"
       ]
     },
+    "Syroot.BinaryData.Core/5.2.0": {
+      "sha512": "zMrTKIa+zwvFqkahbDdCzGW0Jq7BVE44gzuK0OT0ia+DpRtZTcwqOzSMiLs7Z2urY9vMqh5yTMLGVUal0dkQAA==",
+      "type": "package",
+      "path": "syroot.binarydata.core/5.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net452/Syroot.BinaryData.Core.dll",
+        "lib/net452/Syroot.BinaryData.Core.xml",
+        "lib/netcoreapp2.1/Syroot.BinaryData.Core.dll",
+        "lib/netcoreapp2.1/Syroot.BinaryData.Core.xml",
+        "lib/netstandard2.0/Syroot.BinaryData.Core.dll",
+        "lib/netstandard2.0/Syroot.BinaryData.Core.xml",
+        "syroot.binarydata.core.5.2.0.nupkg.sha512",
+        "syroot.binarydata.core.nuspec"
+      ]
+    },
+    "Syroot.BinaryData.Memory/5.2.2": {
+      "sha512": "SZhuJbqrXrECebYwWIRfuvWAlw0wcEvpM98ZDdMl0JSwgocvzGqFC7lP9j8oeeHjmNxOJ+cxNH3wVkGNwf0Q9A==",
+      "type": "package",
+      "path": "syroot.binarydata.memory/5.2.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netcoreapp2.1/Syroot.BinaryData.Memory.dll",
+        "lib/netcoreapp2.1/Syroot.BinaryData.Memory.xml",
+        "lib/netstandard2.0/Syroot.BinaryData.Memory.dll",
+        "lib/netstandard2.0/Syroot.BinaryData.Memory.xml",
+        "syroot.binarydata.memory.5.2.2.nupkg.sha512",
+        "syroot.binarydata.memory.nuspec"
+      ]
+    },
     "System.Diagnostics.EventLog/6.0.0": {
       "sha512": "lcyUiXTsETK2ALsZrX+nWuHSIQeazhqPphLfaRxzdGaG93+0kELqpgEHtwWOlQe7+jSFnKwaCAgL4kjeZCQJnw==",
       "type": "package",
@@ -1650,6 +1727,31 @@
         "lib/portable-net45+win8/System.Reflection.Metadata.xml",
         "system.reflection.metadata.1.6.0.nupkg.sha512",
         "system.reflection.metadata.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
+    "System.Runtime.CompilerServices.Unsafe/4.5.2": {
+      "sha512": "wprSFgext8cwqymChhrBLu62LMg/1u92bU+VOwyfBimSPVFXtsNqEWC92Pf9ofzJFlk4IHmJA75EDJn1b2goAQ==",
+      "type": "package",
+      "path": "system.runtime.compilerservices.unsafe/4.5.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netstandard1.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netstandard1.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/netstandard1.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/netstandard1.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "system.runtime.compilerservices.unsafe.4.5.2.nupkg.sha512",
+        "system.runtime.compilerservices.unsafe.nuspec",
         "useSharedDesignerContext.txt",
         "version.txt"
       ]

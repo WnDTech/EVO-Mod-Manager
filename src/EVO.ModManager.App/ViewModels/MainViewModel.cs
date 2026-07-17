@@ -34,7 +34,7 @@ public partial class MainViewModel : ObservableObject
         IArchiveService archiveService,
         IStorageLocationService storageService,
         IEditorService editorService,
-        ILiveryLabService liveryLabService,
+        
         IModBrowserService browserService,
         IModConverterService converterService,
         IBackupService backupService,
@@ -47,7 +47,7 @@ public partial class MainViewModel : ObservableObject
         _archiveService = archiveService;
         _storageService = storageService;
         _editorService = editorService;
-        _liveryLabService = liveryLabService;
+        
         _browserService = browserService;
         _converterService = converterService;
         _backupService = backupService;
@@ -507,6 +507,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
 
 
 
