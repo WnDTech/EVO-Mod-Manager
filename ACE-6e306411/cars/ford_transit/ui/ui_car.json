@@ -1,0 +1,200 @@
+{
+  "name": "Ford Transit",
+  "brand": "Ford",
+  "description": "* Unladen Kerb Weight (Mass in Running Order) - Includes driver (75kg), full fluids, spare wheel and 90% fuel (72ltrs)<br><br>The fourth generation (or Mk6) of the iconic Transit introduced in 2000, was the third all-new design borrowing styling cues from Ford&#39;s ‘New Edge’ designs, like the Focus and Ka.<br><br>Developed by Ford in the United States, the main innovation is that it is available in both front-wheel drive (V185), or rear-wheel drive (V184). This model features the ‘Puma’ Duratorq turbo diesel engine also used in the 2000 Mondeo and Jaguar X-Type.<br><br>A demonstration of this model&#39;s speed was shown on Top Gear in 2005, where German race driver Sabine Schmitz attempted to drive it around the N&#252;rburgring in under ten minutes, matching Jeremy Clarkson&#39;s time in a turbo-diesel Jaguar S-Type; she was unsuccessful, but only by a few seconds.<br><br>This version won the International Van of the Year 2001.",
+  "tags": [
+    "#Van",
+    "rwd",
+    "manual",
+    "turbo",
+    "street",
+    "Great Britain",
+    "RHD"
+  ],
+  "class": "street",
+  "specs": {
+    "bhp": "135 bhp",
+    "torque": "375 Nm",
+    "weight": "2070 kg*",
+    "topspeed": "175 km/h",
+    "acceleration": "16 s 0–100",
+    "pwratio": "15.33 kg/hp"
+  },
+  "torqueCurve": [
+    [
+      0.0,
+      80.0
+    ],
+    [
+      250.0,
+      84.0
+    ],
+    [
+      500.0,
+      96.0
+    ],
+    [
+      750.0,
+      135.0
+    ],
+    [
+      1000.0,
+      195.0
+    ],
+    [
+      1250.0,
+      265.0
+    ],
+    [
+      1500.0,
+      340.0
+    ],
+    [
+      1750.0,
+      370.0
+    ],
+    [
+      2000.0,
+      375.0
+    ],
+    [
+      2250.0,
+      375.0
+    ],
+    [
+      2500.0,
+      365.0
+    ],
+    [
+      2750.0,
+      345.0
+    ],
+    [
+      3000.0,
+      322.0
+    ],
+    [
+      3250.0,
+      301.0
+    ],
+    [
+      3500.0,
+      281.0
+    ],
+    [
+      3750.0,
+      258.0
+    ],
+    [
+      4000.0,
+      234.0
+    ],
+    [
+      4250.0,
+      203.0
+    ],
+    [
+      4500.0,
+      161.0
+    ],
+    [
+      4750.0,
+      108.0
+    ],
+    [
+      5000.0,
+      52.0
+    ]
+  ],
+  "powerCurve": [
+    [
+      0.0,
+      3.0
+    ],
+    [
+      250.0,
+      3.0
+    ],
+    [
+      500.0,
+      7.0
+    ],
+    [
+      750.0,
+      14.0
+    ],
+    [
+      1000.0,
+      27.0
+    ],
+    [
+      1250.0,
+      47.0
+    ],
+    [
+      1500.0,
+      72.0
+    ],
+    [
+      1750.0,
+      91.0
+    ],
+    [
+      2000.0,
+      105.0
+    ],
+    [
+      2250.0,
+      119.0
+    ],
+    [
+      2500.0,
+      128.0
+    ],
+    [
+      2750.0,
+      133.0
+    ],
+    [
+      3000.0,
+      136.0
+    ],
+    [
+      3250.0,
+      138.0
+    ],
+    [
+      3500.0,
+      138.0
+    ],
+    [
+      3750.0,
+      136.0
+    ],
+    [
+      4000.0,
+      132.0
+    ],
+    [
+      4250.0,
+      121.0
+    ],
+    [
+      4500.0,
+      102.0
+    ],
+    [
+      4750.0,
+      72.0
+    ],
+    [
+      5000.0,
+      37.0
+    ]
+  ],
+  "country": "Great Britain",
+  "year": 2005,
+  "author": "Gary Paterson",
+  "version": "1.0",
+  "url": "https://www.facebook.com/GP3Dstudio"
+}
