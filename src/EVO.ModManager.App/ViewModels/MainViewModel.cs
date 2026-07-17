@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
+using EVO.ModManager.Core.Services.Implementations;
 
 namespace EVO.ModManager.App.ViewModels;
 
@@ -16,6 +17,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IStorageLocationService _storageService;
     private readonly IEditorService _editorService;
     private readonly ILiveryLabService _liveryLabService;
+    private readonly SkinInstallerService _skinInstaller = new();
     private readonly IModBrowserService _browserService;
     private readonly IModConverterService _converterService;
     private readonly IBackupService _backupService;
@@ -215,14 +217,26 @@ public partial class MainViewModel : ObservableObject
 
         if (analysis.HasCardesign)
         {
-            if (!IsLiveryLabAvailable)
+            StatusText = "Installing skin mod directly...";
+            var aceContentFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Saved Games", "ACE", "content");
+
+            // Ensure content folder exists (extracted content.kspkg target)
+            Directory.CreateDirectory(aceContentFolder);
+
+            var skinResult = await _skinInstaller.InstallSkinAsync(archivePath, aceContentFolder, CancellationToken.None);
+            if (skinResult.Success)
             {
-                StatusText = "LiveryLab required for skin mods. Installing LiveryLab...";
-                await _liveryLabService.AutoDownloadAsync();
-                IsLiveryLabAvailable = true;
+                var count = skinResult.InstalledSkins.Count;
+                StatusText = count > 0
+                    ? $"Installed {count} skin(s) for {count} car(s)"
+                    : $"Installed skin: {skinResult.SkinName}";
             }
-            _liveryLabService.LaunchWithZip(archivePath);
-            StatusText = "LiveryLab launched for skin import";
+            else
+            {
+                StatusText = $"Skin installation failed: {skinResult.ErrorMessage}";
+            }
             return;
         }
 
@@ -441,6 +455,9 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
+
+
 
 
 
