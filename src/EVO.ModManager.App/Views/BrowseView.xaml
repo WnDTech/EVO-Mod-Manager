@@ -5,14 +5,28 @@
              Background="#0D0D1A" Foreground="#CCCCCC">
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
+
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#1A1A3E"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2A2A5A"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#3A3A7A"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <Border Grid.Row="0" Background="#141430" BorderBrush="#1E1E3E" BorderThickness="1"
+        <Border Grid.Row="0" Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
                 CornerRadius="8" Padding="16" Margin="0,0,0,12">
             <StackPanel>
                 <Grid>
@@ -25,23 +39,20 @@
                             <TextBlock Text="Source:" FontSize="12" Foreground="#6666AA" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ComboBox ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
                                       DisplayMemberPath="Name" Width="150" Height="28"
-                                      Background="#181838" Foreground="#CCCCCC" BorderBrush="#2A2A50"
-                                      FontSize="12"/>
+                                      Background="#1A1A3E" Foreground="#CCCCCC" BorderBrush="#2A2A50" FontSize="12"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Category:" FontSize="12" Foreground="#6666AA" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
                                       Width="130" Height="28"
-                                      Background="#181838" Foreground="#CCCCCC" BorderBrush="#2A2A50"
-                                      FontSize="12"/>
+                                      Background="#1A1A3E" Foreground="#CCCCCC" BorderBrush="#2A2A50" FontSize="12"/>
                         </StackPanel>
                     </StackPanel>
-                    <Button Grid.Column="1" Command="{Binding FetchModsCommand}" Content="_Refresh"
+                    <Button Grid.Column="1" Command="{Binding FetchModsCommand}" Content="Refresh"
                             Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A50"
                             BorderThickness="1" Padding="12,4" FontSize="12" Height="28"/>
                 </Grid>
-
-                <Border Background="#181838" CornerRadius="4" Padding="12,6" Margin="0,8,0,0"
+                <Border Background="#1A1A3E" CornerRadius="4" Padding="12,6" Margin="0,8,0,0"
                         Visibility="{Binding IsDownloading, Converter={StaticResource BoolVis}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -56,14 +67,12 @@
                 </Border>
             </StackPanel>
         </Border>
-
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="280"/>
             </Grid.ColumnDefinitions>
-
-            <Border Grid.Column="0" Background="#141430" BorderBrush="#1E1E3E"
+            <Border Grid.Column="0" Background="#16163A" BorderBrush="#1E1E3E"
                     BorderThickness="1" CornerRadius="8">
                 <ListBox ItemsSource="{Binding Mods}" SelectedItem="{Binding SelectedMod}"
                          Background="Transparent" BorderThickness="0">
@@ -82,7 +91,7 @@
                                             <TextBlock Text="{Binding Published, StringFormat={}{0:yyyy-MM-dd}}" FontSize="11" Foreground="#6666AA"/>
                                         </StackPanel>
                                     </StackPanel>
-                                    <Border Grid.Column="1" Background="#181838" CornerRadius="3"
+                                    <Border Grid.Column="1" Background="#1A1A3E" CornerRadius="3"
                                             Padding="4,2" HorizontalAlignment="Right" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Category, TargetNullValue='Mod'}" FontSize="10" Foreground="#6666AA"/>
                                     </Border>
@@ -92,8 +101,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-
-            <Border Grid.Column="1" Margin="12,0,0,0" Background="#141430" BorderBrush="#1E1E3E"
+            <Border Grid.Column="1" Margin="12,0,0,0" Background="#16163A" BorderBrush="#1E1E3E"
                     BorderThickness="1" CornerRadius="8" Padding="16">
                 <StackPanel>
                     <TextBlock Text="PREVIEW" FontSize="9" Foreground="#5555AA" FontWeight="Bold"/>
@@ -124,10 +132,9 @@
                     <Button Command="{Binding DataContext.DownloadSelectedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Background="#E94560" Foreground="White" BorderThickness="0"
                             Padding="12,7" FontSize="12" FontWeight="Bold"
-                            HorizontalAlignment="Stretch" Margin="0,10,0,0" Content="_Download &amp; Install" Cursor="Hand"/>
+                            HorizontalAlignment="Stretch" Margin="0,10,0,0" Content="Download &amp; Install"/>
                 </StackPanel>
             </Border>
         </Grid>
     </Grid>
 </UserControl>
-
