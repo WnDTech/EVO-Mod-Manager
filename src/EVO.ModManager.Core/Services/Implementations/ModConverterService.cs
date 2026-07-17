@@ -44,9 +44,10 @@ public class ModConverterService : IModConverterService
             if (sdkPath != null)
             {
                 var editorExe = Path.Combine(sdkPath, "AssettoCorsaEVOEditor.exe");
+                var gameDir = DetectGameDir() ?? sdkPath;
                 var psi = new ProcessStartInfo(editorExe)
                 {
-                    WorkingDirectory = sdkPath,
+                    WorkingDirectory = gameDir,
                     UseShellExecute = true
                 };
                 Process.Start(psi);
@@ -208,6 +209,16 @@ public class ModConverterService : IModConverterService
         return candidates.FirstOrDefault(File.Exists);
     }
 
+    private static string? DetectGameDir()
+    {
+        var candidates = new[]
+        {
+            @"D:\SteamLibrary\steamapps\common\Assetto Corsa EVO",
+            @"G:\GAMES\SteamLibrary\steamapps\common\Assetto Corsa EVO",
+            @"C:\Program Files (x86)\Steam\steamapps\common\Assetto Corsa EVO"
+        };
+        return candidates.FirstOrDefault(d => File.Exists(Path.Combine(d, "AssettoCorsaEVO.exe")));
+    }
     private class ConvertResult
     {
         public string ModName { get; set; } = "Unknown";
@@ -215,3 +226,4 @@ public class ModConverterService : IModConverterService
         public string RootDir { get; set; } = "";
     }
 }
+
