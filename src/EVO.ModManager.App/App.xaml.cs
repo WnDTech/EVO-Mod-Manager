@@ -72,6 +72,11 @@ public partial class App : System.Windows.Application
 
     private void RegisterServices(IServiceCollection services)
     {
+        var appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "EVO Mod Manager");
+        services.AddSingleton(new DatabaseContext(Path.Combine(appData, "evomm.db")));
+        services.AddSingleton<ModRepository>();
         services.AddSingleton<SettingsRepository>();
 
         services.AddSingleton<IGameDetectionService, GameDetectionService>();
@@ -88,14 +93,14 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
-                services.AddSingleton<SettingsViewModel>();
+
         services.AddSingleton<BrowseViewModel>();
         services.AddSingleton<ProfileViewModel>();
         services.AddSingleton<ConverterViewModel>();
         services.AddSingleton<ConflictViewModel>();
 
         services.AddTransient<SettingsView>();
-                services.AddTransient<SettingsView>();
+
         services.AddTransient<BrowseView>();
         services.AddTransient<ProfileView>();
         services.AddTransient<ConverterView>();
@@ -124,4 +129,5 @@ public partial class App : System.Windows.Application
         }
     }
 }
+
 
