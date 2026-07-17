@@ -1,13 +1,23 @@
-using System.Diagnostics;
 using Serilog;
 using EVO.ModManager.Core.Services.Interfaces;
 
 namespace EVO.ModManager.Core.Services.Implementations;
 
+/// <summary>
+/// Converts Assetto Corsa mods to ACE EVO format.
+/// Pipeline: Extract -> Identify -> Convert -> Package
+/// </summary>
 public class ModConverterService : IModConverterService
 {
     private static readonly ILogger Log = Serilog.Log.ForContext<ModConverterService>();
     private static readonly HttpClient Http = new();
+
+    // Known AC file extensions and their ACE equivalents
+    private static readonly HashSet<string> AcModelExts = new(StringComparer.OrdinalIgnoreCase) { ".kn5" };
+    private static readonly HashSet<string> AceModelExts = new(StringComparer.OrdinalIgnoreCase) { ".kspkg" };
+    private static readonly HashSet<string> TextureExts = new(StringComparer.OrdinalIgnoreCase) { ".dds", ".png", ".jpg", ".tga" };
+    private static readonly HashSet<string> AudioExts = new(StringComparer.OrdinalIgnoreCase) { ".wav", ".ogg", ".mp3", ".flac" };
+    private static readonly HashSet<string> ConfigExts = new(StringComparer.OrdinalIgnoreCase) { ".json", ".ini" };
 
     public bool IsSdkAvailable => DetectSdkPath() != null;
     public bool IsEvoForgeAvailable => DetectEvoForge() != null;
@@ -16,214 +26,315 @@ public class ModConverterService : IModConverterService
     public async Task<ConversionResult> ConvertAcModAsync(string sourcePath, string outputDir,
         IProgress<double>? progress = null, CancellationToken ct = default)
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), "EVOMM", "convert", Guid.NewGuid().ToString());
+        var modId = Guid.NewGuid().ToString("N")[..8];
+        var tempDir = Path.Combine(Path.GetTempPath(), "EVOMM", "convert", modId);
+        var aceDir = Path.Combine(outputDir, $"ACE-{modId}");
         Directory.CreateDirectory(tempDir);
 
         try
         {
-            Log.Information("Starting AC-to-ACE conversion for {Source}", sourcePath);
+            Log.Information("=== AC-to-ACE Conversion Pipeline ===");
+            Log.Information("Source: {Source}", sourcePath);
 
             // Step 1: Extract the archive
-            progress?.Report(0.1);
+            progress?.Report(0.05);
+            Log.Information("[1/5] Extracting archive...");
             var archiveService = new ArchiveService();
             await archiveService.ExtractArchiveAsync(sourcePath, tempDir, null, ct);
 
-            // Step 2: Detect mod type and structure
-            progress?.Report(0.3);
-            var result = AnalyzeAcMod(tempDir, sourcePath);
+            // Step 2: Analyze structure
+            progress?.Report(0.2);
+            Log.Information("[2/5] Analyzing mod structure...");
+            var analysis = AnalyzeMod(tempDir, sourcePath);
+            Log.Information("  -> Type: {Type}, Name: {Name}", analysis.ModType, analysis.ModName);
+            Log.Information("  -> Models: {Models}, Textures: {Texs}, Audio: {Audios}, Configs: {Configs}",
+                analysis._ModelCount, analysis.TextureCount, analysis.AudioCount, analysis.ConfigCount);
 
-            // Step 3: Organize into ACE-compatible structure
-            progress?.Report(0.5);
-            var aceDir = OrganizeForAce(tempDir, result);
+            // Step 3: Detect format compatibility
+            progress?.Report(0.4);
+            Log.Information("[3/5] Checking format compatibility...");
+            var compat = CheckCompatibility(analysis);
 
-            // Step 4: Try to pack via ACE Editor or EvoForge
-            progress?.Report(0.7);
+            // Step 4: Convert what we can
+            progress?.Report(0.6);
+            Log.Information("[4/5] Converting compatible assets...");
+            var issues = await ConvertAssetsAsync(tempDir, aceDir, analysis, ct);
 
-            // Priority 1: ACE Editor SDK (has built-in kspkg pack)
-            var sdkPath = DetectSdkPath();
-            if (sdkPath != null)
-            {
-                var editorExe = Path.Combine(sdkPath, "AssettoCorsaEVOEditor.exe");
-                var gameDir = DetectGameDir() ?? sdkPath;
-                var psi = new ProcessStartInfo(editorExe)
-                {
-                    WorkingDirectory = gameDir,
-                    UseShellExecute = true
-                };
-                Process.Start(psi);
+            // Step 5: Package for ACE
+            progress?.Report(0.8);
+            Log.Information("[5/5] Packaging for ACE EVO...");
+            var result = await PackageForAceAsync(aceDir, analysis, compat, ct);
+            result.ModName = analysis.ModName;
 
-                return new ConversionResult
-                {
-                    Success = true,
-                    OutputKspkgPath = aceDir,
-                    ModName = result.ModName,
-                    ErrorMessage = $"ACE Modder has been opened with your AC mod files.\n\n" +
-                        $"Files extracted to: {aceDir}\n\n" +
-                        $"In the ACE Modder:\n" +
-                        $"1. Open your mod project\n" +
-                        $"2. Export/Pack as .kspkg\n" +
-                        $"3. Drop the .kspkg back into EVO Mod Manager"
-                };
-            }
-
-            // Priority 2: EvoForge
-            var evoForgePath = DetectEvoForge();
-            if (evoForgePath != null)
-            {
-                var psi = new ProcessStartInfo(evoForgePath)
-                {
-                    Arguments = $"\"{aceDir}\"",
-                    UseShellExecute = true
-                };
-                Process.Start(psi);
-
-                return new ConversionResult
-                {
-                    Success = true,
-                    ModName = result.ModName,
-                    ErrorMessage = $"EvoForge has been launched with your AC mod.\n\n" +
-                        $"Convert it through EvoForge, then drag the resulting .kspkg into EVO Mod Manager."
-                };
-            }
-
-            // No converter tool available — provide manual instructions
             progress?.Report(1.0);
-            return new ConversionResult
-            {
-                Success = false,
-                ModName = result.ModName,
-                ErrorMessage = $"AC mod detected but no converter available.\n\n" +
-                    $"Mod files extracted to:\n{aceDir}\n\n" +
-                    $"To convert this AC mod to ACE EVO format:\n" +
-                    $"1. Install the ACE Editor SDK (via Steam)\n" +
-                    $"2. Use it to open and repackage the mod\n" +
-                    $"3. Or install EvoForge for automated conversion\n\n" +
-                    $"Once you have a .kspkg file, drag it into EVO Mod Manager."
-            };
+            return result;
         }
         finally
         {
-            // Keep extracted files for user, but clean up if we copied to mods folder
-            if (!Directory.Exists(tempDir)) { try { Directory.Delete(tempDir, true); } catch { } }
+            try { Directory.Delete(tempDir, true); } catch { }
         }
     }
 
-    private static ConvertResult AnalyzeAcMod(string extractDir, string sourcePath)
+    private static ModAnalysis AnalyzeMod(string dir, string sourcePath)
     {
-        var result = new ConvertResult();
-
-        // Detect car mod (AC: content/cars/{carname}/)
-        var carsDir = FindDirectory(extractDir, "cars");
-        if (carsDir != null)
+        var analysis = new ModAnalysis
         {
-            result.ModType = "Car";
-            result.ModName = new DirectoryInfo(carsDir).Name;
-            result.RootDir = carsDir;
-            return result;
-        }
+            ModName = Path.GetFileNameWithoutExtension(sourcePath)
+        };
 
-        // Detect track mod (AC: content/tracks/{trackname}/)
-        var tracksDir = FindDirectory(extractDir, "tracks");
-        if (tracksDir != null)
+        // Find content directory (AC mods have content/cars/ or content/tracks/)
+        var contentDir = FindDirectory(dir, "content");
+        if (contentDir != null)
         {
-            result.ModType = "Track";
-            result.ModName = new DirectoryInfo(tracksDir).Name;
-            result.RootDir = tracksDir;
-            return result;
-        }
+            var carsDir = Path.Combine(contentDir, "cars");
+            var tracksDir = Path.Combine(contentDir, "tracks");
 
-        // Fallback: use archive name
-        result.ModName = Path.GetFileNameWithoutExtension(sourcePath);
-        result.RootDir = extractDir;
-        return result;
-    }
-
-    private static string OrganizeForAce(string extractDir, ConvertResult result)
-    {
-        // Place mod files into an ACE-compatible folder under a single mod directory
-        var aceModDir = Path.Combine(extractDir, "..", result.ModName + "_ACE");
-        Directory.CreateDirectory(aceModDir);
-
-        // Copy mod content into the ACE mod folder
-        if (Directory.Exists(result.RootDir))
-        {
-            foreach (var file in Directory.GetFiles(result.RootDir, "*", SearchOption.AllDirectories))
+            if (Directory.Exists(carsDir))
             {
-                var relPath = Path.GetRelativePath(result.RootDir, file);
-                var destPath = Path.Combine(aceModDir, relPath);
+                analysis.ModType = "Car";
+                analysis.SubDirs = Directory.GetDirectories(carsDir).Select(Path.GetFileName).ToList();
+                analysis.RootContentDir = carsDir;
+                Log.Information("  Detected car mod with {Count} cars: {Names}",
+                    analysis.SubDirs.Count, string.Join(", ", analysis.SubDirs));
+            }
+            else if (Directory.Exists(tracksDir))
+            {
+                analysis.ModType = "Track";
+                analysis.SubDirs = Directory.GetDirectories(tracksDir).Select(Path.GetFileName).ToList();
+                analysis.RootContentDir = tracksDir;
+                Log.Information("  Detected track mod: {Name}", analysis.ModName);
+            }
+            else
+            {
+                analysis.RootContentDir = contentDir;
+            }
+        }
+        else
+        {
+            analysis.RootContentDir = dir;
+        }
+
+        // Count file types
+        var allFiles = Directory.GetFiles(dir, "*", SearchOption.AllDirectories);
+        analysis._ModelCount = allFiles.Count(f => AcModelExts.Contains(Path.GetExtension(f)));
+        analysis.TextureCount = allFiles.Count(f => TextureExts.Contains(Path.GetExtension(f)));
+        analysis.AudioCount = allFiles.Count(f => AudioExts.Contains(Path.GetExtension(f)));
+        analysis.ConfigCount = allFiles.Count(f => ConfigExts.Contains(Path.GetExtension(f)));
+        analysis.OtherCount = allFiles.Length - analysis._ModelCount - analysis.TextureCount - analysis.AudioCount - analysis.ConfigCount;
+
+        return analysis;
+    }
+
+    private static CompatibilityReport CheckCompatibility(ModAnalysis analysis)
+    {
+        var report = new CompatibilityReport
+        {
+            HasModels = analysis._ModelCount > 0,
+            HasTextures = analysis.TextureCount > 0,
+            HasAudio = analysis.AudioCount > 0,
+            HasConfigs = analysis.ConfigCount > 0,
+            ModelFormat = analysis._ModelCount > 0 ? ".kn5 (AC native)" : "N/A",
+            TargetModelFormat = ".kspkg (ACE native)",
+            ModelsConvertible = false, // .kn5 requires reverse engineering or SDK
+            TexturesConvertible = analysis.TextureCount > 0, // DDS/PNG can be copied
+            AudioConvertible = analysis.AudioCount > 0, // WAV/OGG can be copied
+            ConfigsConvertible = analysis.ConfigCount > 0, // JSON can be adapted
+            RequiresSdk = analysis._ModelCount > 0 // Models need SDK or external tool
+        };
+
+        return report;
+    }
+
+    private static async Task<List<ConversionIssue>> ConvertAssetsAsync(string srcDir, string destDir,
+        ModAnalysis analysis, CancellationToken ct)
+    {
+        var issues = new List<ConversionIssue>();
+
+        // Create target structure
+        var targetContentDir = Path.Combine(destDir, "content");
+        Directory.CreateDirectory(targetContentDir);
+
+        // Copy textures (DDS/PNG/TGA — ACE should read these)
+        Log.Information("  Copying {Count} textures...", analysis.TextureCount);
+        foreach (var file in Directory.GetFiles(srcDir, "*.*", SearchOption.AllDirectories)
+            .Where(f => TextureExts.Contains(Path.GetExtension(f))))
+        {
+            ct.ThrowIfCancellationRequested();
+            var relPath = Path.GetRelativePath(srcDir, file);
+            var destPath = Path.Combine(destDir, relPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+            File.Copy(file, destPath, true);
+        }
+
+        // Copy audio (WAV/OGG — ACE should read these)
+        Log.Information("  Copying {Count} audio files...", analysis.AudioCount);
+        foreach (var file in Directory.GetFiles(srcDir, "*.*", SearchOption.AllDirectories)
+            .Where(f => AudioExts.Contains(Path.GetExtension(f))))
+        {
+            ct.ThrowIfCancellationRequested();
+            var relPath = Path.GetRelativePath(srcDir, file);
+            var destPath = Path.Combine(destDir, relPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+            File.Copy(file, destPath, true);
+        }
+
+        // Copy configs (JSON/INI)
+        Log.Information("  Copying {Count} config files...", analysis.ConfigCount);
+        foreach (var file in Directory.GetFiles(srcDir, "*.*", SearchOption.AllDirectories)
+            .Where(f => ConfigExts.Contains(Path.GetExtension(f))))
+        {
+            ct.ThrowIfCancellationRequested();
+            var relPath = Path.GetRelativePath(srcDir, file);
+            var destPath = Path.Combine(destDir, relPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+            File.Copy(file, destPath, true);
+        }
+
+        // Flag model files as needing conversion
+        if (analysis._ModelCount > 0)
+        {
+            issues.Add(new ConversionIssue
+            {
+                Severity = "Warning",
+                Item = $"Models ({analysis._ModelCount} .kn5 files)",
+                Detail = ".kn5 models require conversion to ACE format. " +
+                    "Launch the ACE Modder to convert these files.",
+                Recommendation = "Open ACE Editor → Import model → Export as .kspkg"
+            });
+
+            // Copy .kn5 files anyway (for reference in the ACE Editor)
+            foreach (var file in Directory.GetFiles(srcDir, "*.*", SearchOption.AllDirectories)
+                .Where(f => AcModelExts.Contains(Path.GetExtension(f))))
+            {
+                ct.ThrowIfCancellationRequested();
+                var relPath = Path.GetRelativePath(srcDir, file);
+                var destPath = Path.Combine(destDir, relPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
                 File.Copy(file, destPath, true);
             }
         }
 
-        // Also copy any content directory structure
-        var contentDir = Path.Combine(extractDir, "content");
-        if (Directory.Exists(contentDir))
+        return issues;
+    }
+
+    private async Task<ConversionResult> PackageForAceAsync(string aceDir, ModAnalysis analysis,
+        CompatibilityReport compat, CancellationToken ct)
+    {
+        // Option 1: SDK Editor available — launch it with the converted files
+        var sdkPath = DetectSdkPath();
+        if (sdkPath != null)
         {
-            foreach (var file in Directory.GetFiles(contentDir, "*", SearchOption.AllDirectories))
+            var gameDir = DetectGameDir() ?? Path.GetDirectoryName(sdkPath);
+            var editorExe = Path.Combine(sdkPath, "AssettoCorsaEVOEditor.exe");
+
+            var psi = new System.Diagnostics.ProcessStartInfo(editorExe)
             {
-                var relPath = "content/" + Path.GetRelativePath(contentDir, file);
-                var destPath = Path.Combine(aceModDir, relPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-                File.Copy(file, destPath, true);
-            }
+                WorkingDirectory = gameDir,
+                UseShellExecute = true,
+                Arguments = $"\"{aceDir}\""
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            var issues = new List<string>();
+            if (compat.HasModels && !compat.ModelsConvertible)
+                issues.Add($"{analysis._ModelCount} .kn5 model(s) need conversion via ACE Editor");
+
+            var msg = $"ACE Modder launched with your converted mod files.\n\n" +
+                $"Mod: {analysis.ModName}\nType: {analysis.ModType}\n\n" +
+                $"Textures ({analysis.TextureCount}) ✓ copied\n" +
+                $"Audio ({analysis.AudioCount}) ✓ copied\n" +
+                $"Configs ({analysis.ConfigCount}) ✓ copied\n\n" +
+                (issues.Count > 0 ? $"⚠ {string.Join("\n⚠ ", issues)}\n\n" : "") +
+                $"In the ACE Modder, use File → Export to create a .kspkg file.\n" +
+                $"Then drag the .kspkg into EVO Mod Manager.";
+
+            return new ConversionResult { Success = true, ModName = analysis.ModName, ErrorMessage = msg };
         }
 
-        // Write a README explaining how to use this
-        File.WriteAllText(Path.Combine(aceModDir, "README_ACE.txt"),
-            $"AC-to-ACE Conversion: {result.ModName}\n" +
-            $"Type: {result.ModType}\n\n" +
-            "To create an ACE-compatible .kspkg mod:\n" +
-            "1. Open the ACE Modder (AssettoCorsaEVOEditor)\n" +
-            "2. Import/Create a new project from these files\n" +
-            "3. Export as .kspkg\n" +
-            "4. Drop the .kspkg into EVO Mod Manager");
+        // Option 2: EvoForge available
+        var evoForge = DetectEvoForge();
+        if (evoForge != null)
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(evoForge)
+            {
+                Arguments = $"\"{aceDir}\"", UseShellExecute = true
+            });
 
-        return aceModDir;
+            return new ConversionResult { Success = true, ModName = analysis.ModName,
+                ErrorMessage = $"EvoForge launched with {analysis.ModName}. Convert then import the .kspkg." };
+        }
+
+        // Option 3: No converter — provide instructions
+        return new ConversionResult
+        {
+            Success = false, ModName = analysis.ModName,
+            ErrorMessage = $"Conversion prepared but no converter tool available.\n\n" +
+                $"Files are at: {aceDir}\n\n" +
+                $"To complete the conversion:\n" +
+                $"1. Install ACE Editor SDK (free on Steam)\n" +
+                $"2. Open it and import the mod files from the above path\n" +
+                $"3. Export as .kspkg\n" +
+                $"4. Drag into EVO Mod Manager"
+        };
     }
 
     private static string? FindDirectory(string root, string name)
     {
-        var dirs = Directory.GetDirectories(root, name, SearchOption.AllDirectories);
-        return dirs.FirstOrDefault();
+        return Directory.GetDirectories(root, name, SearchOption.AllDirectories).FirstOrDefault();
     }
 
     private static string? DetectSdkPath()
     {
-        var candidates = new[]
-        {
+        foreach (var p in new[] {
             @"G:\GAMES\SteamLibrary\steamapps\common\Assetto Corsa EVO SDK",
-            @"D:\SteamLibrary\steamapps\common\Assetto Corsa EVO SDK"
-        };
-        return candidates.FirstOrDefault(p => File.Exists(Path.Combine(p, "AssettoCorsaEVOEditor.exe")));
-    }
-
-    private static string? DetectEvoForge()
-    {
-        var candidates = new[]
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "EvoForge", "EvoForge.exe"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "EvoForge", "EvoForge.exe"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "EvoForge", "EvoForge.exe")
-        };
-        return candidates.FirstOrDefault(File.Exists);
+            @"D:\SteamLibrary\steamapps\common\Assetto Corsa EVO SDK" })
+            if (File.Exists(Path.Combine(p, "AssettoCorsaEVOEditor.exe"))) return p;
+        return null;
     }
 
     private static string? DetectGameDir()
     {
-        var candidates = new[]
-        {
+        foreach (var p in new[] {
             @"D:\SteamLibrary\steamapps\common\Assetto Corsa EVO",
-            @"G:\GAMES\SteamLibrary\steamapps\common\Assetto Corsa EVO",
-            @"C:\Program Files (x86)\Steam\steamapps\common\Assetto Corsa EVO"
-        };
-        return candidates.FirstOrDefault(d => File.Exists(Path.Combine(d, "AssettoCorsaEVO.exe")));
+            @"G:\GAMES\SteamLibrary\steamapps\common\Assetto Corsa EVO" })
+            if (File.Exists(Path.Combine(p, "AssettoCorsaEVO.exe"))) return p;
+        return null;
     }
-    private class ConvertResult
+
+    private static string? DetectEvoForge()
     {
-        public string ModName { get; set; } = "Unknown";
-        public string ModType { get; set; } = "Unknown";
-        public string RootDir { get; set; } = "";
+        foreach (var p in new[] {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "EvoForge", "EvoForge.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "EvoForge", "EvoForge.exe") })
+            if (File.Exists(p)) return p;
+        return null;
+    }
+
+    private class ModAnalysis
+    {
+        public string ModName = "";
+        public string ModType = "Unknown";
+        public string RootContentDir = "";
+        public List<string> SubDirs = new();
+        public int _ModelCount; public int TextureCount; public int AudioCount; public int ConfigCount; public int OtherCount;
+    }
+
+    private class CompatibilityReport
+    {
+        public bool HasModels, HasTextures, HasAudio, HasConfigs;
+        public string ModelFormat = "", TargetModelFormat = "";
+        public bool ModelsConvertible, TexturesConvertible, AudioConvertible, ConfigsConvertible;
+        public bool RequiresSdk;
+    }
+
+    private class ConversionIssue
+    {
+        public string Severity = "";
+        public string Item = "";
+        public string Detail = "";
+        public string Recommendation = "";
     }
 }
+
+
 
