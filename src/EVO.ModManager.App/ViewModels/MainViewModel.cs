@@ -215,14 +215,28 @@ public partial class MainViewModel : ObservableObject
 
         var analysis = _archiveService.AnalyzeArchive(archivePath);
 
+        // AC mod detected — route to converter (priority)
+        if (analysis.IsAcMod)
+        {
+            StatusText = "AC mod detected — launching converter...";
+            var convResult = await _converterService.ConvertAcModAsync(archivePath, "");
+            if (convResult.Success)
+            {
+                StatusText = convResult.ErrorMessage ?? "Converter launched";
+            }
+            else
+            {
+                StatusText = convResult.ErrorMessage ?? "No converter available";
+            }
+            return;
+        }
+
         if (analysis.HasCardesign)
         {
             StatusText = "Installing skin mod directly...";
             var aceContentFolder = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "Saved Games", "ACE", "content");
-
-            // Ensure content folder exists (extracted content.kspkg target)
             Directory.CreateDirectory(aceContentFolder);
 
             var skinResult = await _skinInstaller.InstallSkinAsync(archivePath, aceContentFolder, CancellationToken.None);
@@ -236,22 +250,6 @@ public partial class MainViewModel : ObservableObject
             else
             {
                 StatusText = $"Skin installation failed: {skinResult.ErrorMessage}";
-            }
-            return;
-        }
-
-        // AC mod detected — route to converter
-        if (analysis.IsAcMod)
-        {
-            StatusText = "AC mod detected — launching converter...";
-            var convResult = await _converterService.ConvertAcModAsync(archivePath, "");
-            if (convResult.Success)
-            {
-                StatusText = convResult.ErrorMessage ?? "Converter launched";
-            }
-            else
-            {
-                StatusText = convResult.ErrorMessage ?? "No converter available";
             }
             return;
         }
@@ -455,6 +453,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
 
 
 

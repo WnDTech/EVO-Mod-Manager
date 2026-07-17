@@ -60,20 +60,16 @@ public class ArchiveService : IArchiveService
                     result.CardesignFiles.Add(entry.Key ?? "");
                 }
 
-                // AC mod detection
+                // AC mod detection - robust check for multiple patterns
                 var keyLower = (entry.Key ?? "").ToLowerInvariant();
-                if (keyLower.StartsWith("content/cars/") || keyLower.StartsWith("content/tracks/") ||
-                    keyLower.Contains("/content/cars/") || keyLower.Contains("/content/tracks/"))
-                {
-                    result.IsAcMod = true;
-                }
-                if (ext.Equals(".kn5", StringComparison.OrdinalIgnoreCase) ||
-                    ext.Equals(".kn5") ||
+                var isAcPath = keyLower.Contains("cars/") || keyLower.Contains("tracks/");
+                var isAcExt = ext.Equals(".kn5", StringComparison.OrdinalIgnoreCase) ||
+                    ext.Equals(".knh", StringComparison.OrdinalIgnoreCase) ||
                     keyLower.Contains("ui_car.json") ||
-                    keyLower.Contains("ui_track.json"))
-                {
+                    keyLower.Contains("ui_track.json") ||
+                    keyLower.Contains("ui_skin.json");
+                if (isAcPath || isAcExt)
                     result.IsAcMod = true;
-                }
             }
 
             result.SuggestedModName = GuessModName(archivePath, rootDirs, rootFiles, result);
@@ -136,6 +132,7 @@ public class ArchiveService : IArchiveService
         return fileName;
     }
 }
+
 
 
 
