@@ -138,3 +138,11 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\EVO.ModManager.Tests.pdb
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\EVO.ModManager.Tests.genruntimeconfig.cache
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\ref\EVO.ModManager.Tests.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\SkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\osx\native\libSkiaSharp.dylib
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\win-arm64\native\libSkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\win-arm64\native\libSkiaSharp.pdb
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\win-x64\native\libSkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\win-x64\native\libSkiaSharp.pdb
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\win-x86\native\libSkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\runtimes\win-x86\native\libSkiaSharp.pdb

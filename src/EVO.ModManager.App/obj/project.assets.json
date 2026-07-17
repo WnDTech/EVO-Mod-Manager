@@ -153,6 +153,71 @@
           "lib/net8.0/SharpCompress.dll": {}
         }
       },
+      "SkiaSharp/4.150.1": {
+        "type": "package",
+        "dependencies": {
+          "SkiaSharp.NativeAssets.Win32": "4.150.1",
+          "SkiaSharp.NativeAssets.macOS": "4.150.1"
+        },
+        "compile": {
+          "ref/net9.0/SkiaSharp.dll": {}
+        },
+        "runtime": {
+          "lib/net9.0/SkiaSharp.dll": {
+            "related": ".pdb"
+          }
+        }
+      },
+      "SkiaSharp.NativeAssets.macOS/4.150.1": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/_._": {}
+        },
+        "runtime": {
+          "lib/net9.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/osx/native/libSkiaSharp.dylib": {
+            "assetType": "native",
+            "rid": "osx"
+          }
+        }
+      },
+      "SkiaSharp.NativeAssets.Win32/4.150.1": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/_._": {}
+        },
+        "runtime": {
+          "lib/net9.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win-arm64/native/libSkiaSharp.dll": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-arm64/native/libSkiaSharp.pdb": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-x64/native/libSkiaSharp.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x64/native/libSkiaSharp.pdb": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/libSkiaSharp.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          },
+          "runtimes/win-x86/native/libSkiaSharp.pdb": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
       "SQLitePCLRaw.bundle_e_sqlite3/2.1.11": {
         "type": "package",
         "dependencies": {
@@ -330,6 +395,7 @@
           "Microsoft.Data.Sqlite": "10.0.9",
           "Serilog": "4.4.0",
           "SharpCompress": "0.49.1",
+          "SkiaSharp": "4.150.1",
           "System.ServiceModel.Syndication": "10.0.9"
         },
         "compile": {
@@ -591,6 +657,153 @@
         "lib/netstandard2.1/SharpCompress.dll",
         "sharpcompress.0.49.1.nupkg.sha512",
         "sharpcompress.nuspec"
+      ]
+    },
+    "SkiaSharp/4.150.1": {
+      "sha512": "5v3T8X1N62Dp+AkPO70GNBNS/NRBPGMOTiN+Prg33sZAcm/Ug3YOAH+3RTj/jxJV8NGTJs2idGpC2Qdae2mGLQ==",
+      "type": "package",
+      "path": "skiasharp/4.150.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "README.md",
+        "icon.png",
+        "lib/net10.0-android36.0/SkiaSharp.dll",
+        "lib/net10.0-android36.0/SkiaSharp.pdb",
+        "lib/net10.0-android36.0/SkiaSharp.xml",
+        "lib/net10.0-ios26.0/SkiaSharp.dll",
+        "lib/net10.0-ios26.0/SkiaSharp.pdb",
+        "lib/net10.0-maccatalyst26.0/SkiaSharp.dll",
+        "lib/net10.0-maccatalyst26.0/SkiaSharp.pdb",
+        "lib/net10.0-macos26.0/SkiaSharp.dll",
+        "lib/net10.0-macos26.0/SkiaSharp.pdb",
+        "lib/net10.0-tizen10.0/SkiaSharp.dll",
+        "lib/net10.0-tizen10.0/SkiaSharp.pdb",
+        "lib/net10.0-tvos26.0/SkiaSharp.dll",
+        "lib/net10.0-tvos26.0/SkiaSharp.pdb",
+        "lib/net10.0-windows10.0.19041/SkiaSharp.dll",
+        "lib/net10.0-windows10.0.19041/SkiaSharp.pdb",
+        "lib/net10.0/SkiaSharp.dll",
+        "lib/net10.0/SkiaSharp.pdb",
+        "lib/net462/SkiaSharp.dll",
+        "lib/net462/SkiaSharp.pdb",
+        "lib/net48/SkiaSharp.dll",
+        "lib/net48/SkiaSharp.pdb",
+        "lib/net6.0-tizen8.0/SkiaSharp.dll",
+        "lib/net6.0-tizen8.0/SkiaSharp.pdb",
+        "lib/net6.0/SkiaSharp.dll",
+        "lib/net6.0/SkiaSharp.pdb",
+        "lib/net9.0-android35.0/SkiaSharp.dll",
+        "lib/net9.0-android35.0/SkiaSharp.pdb",
+        "lib/net9.0-android35.0/SkiaSharp.xml",
+        "lib/net9.0-ios18.0/SkiaSharp.dll",
+        "lib/net9.0-ios18.0/SkiaSharp.pdb",
+        "lib/net9.0-maccatalyst18.0/SkiaSharp.dll",
+        "lib/net9.0-maccatalyst18.0/SkiaSharp.pdb",
+        "lib/net9.0-macos15.0/SkiaSharp.dll",
+        "lib/net9.0-macos15.0/SkiaSharp.pdb",
+        "lib/net9.0-tizen8.0/SkiaSharp.dll",
+        "lib/net9.0-tizen8.0/SkiaSharp.pdb",
+        "lib/net9.0-tvos18.0/SkiaSharp.dll",
+        "lib/net9.0-tvos18.0/SkiaSharp.pdb",
+        "lib/net9.0-windows10.0.19041/SkiaSharp.dll",
+        "lib/net9.0-windows10.0.19041/SkiaSharp.pdb",
+        "lib/net9.0/SkiaSharp.dll",
+        "lib/net9.0/SkiaSharp.pdb",
+        "lib/netstandard2.0/SkiaSharp.dll",
+        "lib/netstandard2.0/SkiaSharp.pdb",
+        "lib/netstandard2.1/SkiaSharp.dll",
+        "lib/netstandard2.1/SkiaSharp.pdb",
+        "ref/net10.0-android36.0/SkiaSharp.dll",
+        "ref/net10.0-ios26.0/SkiaSharp.dll",
+        "ref/net10.0-maccatalyst26.0/SkiaSharp.dll",
+        "ref/net10.0-macos26.0/SkiaSharp.dll",
+        "ref/net10.0-tizen10.0/SkiaSharp.dll",
+        "ref/net10.0-tvos26.0/SkiaSharp.dll",
+        "ref/net10.0-windows10.0.19041/SkiaSharp.dll",
+        "ref/net10.0/SkiaSharp.dll",
+        "ref/net462/SkiaSharp.dll",
+        "ref/net48/SkiaSharp.dll",
+        "ref/net6.0-tizen8.0/SkiaSharp.dll",
+        "ref/net6.0/SkiaSharp.dll",
+        "ref/net9.0-android35.0/SkiaSharp.dll",
+        "ref/net9.0-ios18.0/SkiaSharp.dll",
+        "ref/net9.0-maccatalyst18.0/SkiaSharp.dll",
+        "ref/net9.0-macos15.0/SkiaSharp.dll",
+        "ref/net9.0-tizen8.0/SkiaSharp.dll",
+        "ref/net9.0-tvos18.0/SkiaSharp.dll",
+        "ref/net9.0-windows10.0.19041/SkiaSharp.dll",
+        "ref/net9.0/SkiaSharp.dll",
+        "ref/netstandard2.0/SkiaSharp.dll",
+        "ref/netstandard2.1/SkiaSharp.dll",
+        "skiasharp.4.150.1.nupkg.sha512",
+        "skiasharp.nuspec"
+      ]
+    },
+    "SkiaSharp.NativeAssets.macOS/4.150.1": {
+      "sha512": "r755HVwaHZhyf1clWjrM2/RoOZYCzkQEmE9pu/mVsebPejWu52niNPUwtfyf112qoF0PIk6OndqVOUoITj6TwQ==",
+      "type": "package",
+      "path": "skiasharp.nativeassets.macos/4.150.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "README.md",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/SkiaSharp.NativeAssets.macOS.targets",
+        "build/net48/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net10.0-macos26.0/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net462/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net48/SkiaSharp.NativeAssets.macOS.targets",
+        "buildTransitive/net9.0-macos15.0/SkiaSharp.NativeAssets.macOS.targets",
+        "icon.png",
+        "lib/net10.0-macos26.0/_._",
+        "lib/net10.0/_._",
+        "lib/net462/_._",
+        "lib/net48/_._",
+        "lib/net6.0/_._",
+        "lib/net9.0-macos15.0/_._",
+        "lib/net9.0/_._",
+        "lib/netstandard2.0/_._",
+        "lib/netstandard2.1/_._",
+        "runtimes/osx/native/libSkiaSharp.dylib",
+        "skiasharp.nativeassets.macos.4.150.1.nupkg.sha512",
+        "skiasharp.nativeassets.macos.nuspec"
+      ]
+    },
+    "SkiaSharp.NativeAssets.Win32/4.150.1": {
+      "sha512": "qrLSL8OonbkMJdSH8heK0Jl39Y2xxZGdd7Ru4cyBXk2ITdx+Fu1sCFLmvCKmnMaYs//mlN/YSpSpOurEXErcQw==",
+      "type": "package",
+      "path": "skiasharp.nativeassets.win32/4.150.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "README.md",
+        "THIRD-PARTY-NOTICES.txt",
+        "build/net462/SkiaSharp.NativeAssets.Win32.targets",
+        "build/net48/SkiaSharp.NativeAssets.Win32.targets",
+        "buildTransitive/net462/SkiaSharp.NativeAssets.Win32.targets",
+        "buildTransitive/net48/SkiaSharp.NativeAssets.Win32.targets",
+        "icon.png",
+        "lib/net10.0-windows10.0.19041/_._",
+        "lib/net10.0/_._",
+        "lib/net462/_._",
+        "lib/net48/_._",
+        "lib/net6.0/_._",
+        "lib/net9.0-windows10.0.19041/_._",
+        "lib/net9.0/_._",
+        "lib/netstandard2.0/_._",
+        "lib/netstandard2.1/_._",
+        "runtimes/win-arm64/native/libSkiaSharp.dll",
+        "runtimes/win-arm64/native/libSkiaSharp.pdb",
+        "runtimes/win-x64/native/libSkiaSharp.dll",
+        "runtimes/win-x64/native/libSkiaSharp.pdb",
+        "runtimes/win-x86/native/libSkiaSharp.dll",
+        "runtimes/win-x86/native/libSkiaSharp.pdb",
+        "skiasharp.nativeassets.win32.4.150.1.nupkg.sha512",
+        "skiasharp.nativeassets.win32.nuspec"
       ]
     },
     "SQLitePCLRaw.bundle_e_sqlite3/2.1.11": {

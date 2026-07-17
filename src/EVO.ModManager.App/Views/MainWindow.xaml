@@ -150,6 +150,15 @@
                                 </StackPanel>
                             </StackPanel>
                         </Button>
+                    <Button Command="{Binding InstallFromUrlCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🌍" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Install from URL" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Download .zip / .7z / .kspkg" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
                     <Button Command="{Binding LaunchEditorCommand}" IsEnabled="{Binding IsEditorAvailable}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔧" FontSize="14" VerticalAlignment="Center"/>

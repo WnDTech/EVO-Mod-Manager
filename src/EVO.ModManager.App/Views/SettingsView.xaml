@@ -132,6 +132,31 @@
                     <TextBlock Text="{Binding BackupStatus}" FontSize="12" Foreground="#CCCCCC" Margin="0,4,0,0"/>
                 </StackPanel>
             </Border>
+
+            <Border Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Mod Collections" FontSize="14" FontWeight="SemiBold" Foreground="#DDDDDD" Margin="0,0,0,6"/>
+                    <TextBlock Text="Export a JSON list of installed mods or import a collection to see which mods are available, installed, or missing." FontSize="12" Foreground="#6666AA" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Command="{Binding ExportCollectionCommand}" Content="_Export Collection (JSON)"
+                                Background="#E94560" Foreground="White" BorderThickness="0"
+                                Padding="12,6" FontSize="12" FontWeight="Bold" Margin="0,0,8,0"/>
+                        <Button Command="{Binding ImportCollectionCommand}" Content="_Import Collection (JSON)"
+                                Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A4A"
+                                BorderThickness="1" Padding="12,6" FontSize="12" Margin="0,0,8,0"/>
+                        <Button Command="{Binding ExportCollectionWithFilesCommand}" Content="Export w/ _Files (ZIP)"
+                                Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A4A"
+                                BorderThickness="1" Padding="12,6" FontSize="12" Margin="0,0,8,0"/>
+                        <Button Command="{Binding ImportCollectionWithFilesCommand}" Content="Import w/ _Files (ZIP)"
+                                Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A4A"
+                                BorderThickness="1" Padding="12,6" FontSize="12"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding CollectionStatus}" FontSize="12" Foreground="#CCCCCC" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

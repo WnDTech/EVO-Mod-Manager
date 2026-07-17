@@ -93,6 +93,13 @@ public class DatabaseContext : IDisposable
                 Key             TEXT PRIMARY KEY,
                 Value           TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS ModDependencies (
+                Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                ModId           TEXT NOT NULL REFERENCES Mods(Id) ON DELETE CASCADE,
+                DependsOnModId  TEXT NOT NULL REFERENCES Mods(Id) ON DELETE CASCADE,
+                UNIQUE(ModId, DependsOnModId)
+            );
             """;
 
         cmd.ExecuteNonQuery();

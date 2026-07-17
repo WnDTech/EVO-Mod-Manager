@@ -23,6 +23,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IBackupService _backupService;
     private readonly IProfileService _profileService;
     private readonly IConflictDetectionService _conflictService;
+    private readonly IUrlInstallService _urlInstallService;
 
     private string _modsFolder = string.Empty;
     private string _gamePath = string.Empty;
@@ -38,7 +39,8 @@ public partial class MainViewModel : ObservableObject
         IModConverterService converterService,
         IBackupService backupService,
         IProfileService profileService,
-        IConflictDetectionService conflictService)
+        IConflictDetectionService conflictService,
+        IUrlInstallService urlInstallService)
     {
         _gameDetection = gameDetection;
         _modDiscovery = modDiscovery;
@@ -51,6 +53,7 @@ public partial class MainViewModel : ObservableObject
         _backupService = backupService;
         _profileService = profileService;
         _conflictService = conflictService;
+        _urlInstallService = urlInstallService;
 
         _selectedNavItem = NavItems[0];
 
@@ -150,6 +153,25 @@ public partial class MainViewModel : ObservableObject
         foreach (var archive in archives)
         {
             await InstallFromArchiveAsync(archive);
+        }
+    }
+
+    [RelayCommand]
+    public async Task InstallFromUrlAsync()
+    {
+        var dialog = new Views.InputDialog();
+        if (System.Windows.Application.Current.MainWindow != null)
+            dialog.Owner = System.Windows.Application.Current.MainWindow;
+
+        if (dialog.ShowDialog() == true && dialog.InputText != null)
+        {
+            var url = dialog.InputText;
+            StatusText = "Downloading...";
+            var progress = new Progress<double>(p => StatusText = $"Downloading... {p * 100:F0}%");
+            var result = await _urlInstallService.InstallFromUrlAsync(url, progress);
+            StatusText = result.Message ?? (result.Success ? "Install completed" : "Install failed");
+            if (result.Success)
+                await RefreshModsAsync();
         }
     }
 
@@ -485,6 +507,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
 
 
 

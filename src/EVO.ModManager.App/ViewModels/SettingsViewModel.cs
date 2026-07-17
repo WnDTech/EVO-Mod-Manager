@@ -15,6 +15,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IEditorService _editorService;
     private readonly IModConverterService _converterService;
     private readonly IBackupService _backupService;
+    private readonly ICollectionService _collectionService;
+    private readonly IModDiscoveryService _modDiscovery;
 
     private string _modsFolder = string.Empty;
 
@@ -24,7 +26,9 @@ public partial class SettingsViewModel : ObservableObject
         ILiveryLabService liveryLabService,
         IEditorService editorService,
         IModConverterService converterService,
-        IBackupService backupService)
+        IBackupService backupService,
+        ICollectionService collectionService,
+        IModDiscoveryService modDiscovery)
     {
         _storageService = storageService;
         _gameDetection = gameDetection;
@@ -32,6 +36,8 @@ public partial class SettingsViewModel : ObservableObject
         _editorService = editorService;
         _converterService = converterService;
         _backupService = backupService;
+        _collectionService = collectionService;
+        _modDiscovery = modDiscovery;
     }
 
     public void SetModsFolder(string path) => _modsFolder = path;
@@ -62,6 +68,9 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _backupStatus = string.Empty;
+
+    [ObservableProperty]
+    private string _collectionStatus = string.Empty;
 
     [RelayCommand]
     public void Load()
@@ -201,6 +210,137 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task ExportCollectionAsync()
+    {
+        if (string.IsNullOrEmpty(_modsFolder))
+        {
+            CollectionStatus = "Mods folder not available";
+            return;
+        }
+
+        var dialog = new System.Windows.Forms.SaveFileDialog
+        {
+            Title = "Export Mod Collection",
+            Filter = "Collection files (*.json)|*.json|All files (*.*)|*.*",
+            FileName = $"mod-collection-{DateTime.Now:yyyyMMdd-HHmmss}.json"
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            return;
+
+        CollectionStatus = "Exporting collection...";
+        try
+        {
+            var mods = await _modDiscovery.ScanModsFolderAsync(_modsFolder);
+            await _collectionService.ExportCollectionAsync(mods, dialog.FileName);
+            CollectionStatus = $"Exported {mods.Count} mods to {Path.GetFileName(dialog.FileName)}";
+        }
+        catch (Exception ex)
+        {
+            CollectionStatus = $"Export failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task ImportCollectionAsync()
+    {
+        if (string.IsNullOrEmpty(_modsFolder))
+        {
+            CollectionStatus = "Mods folder not available";
+            return;
+        }
+
+        var dialog = new System.Windows.Forms.OpenFileDialog
+        {
+            Title = "Import Mod Collection",
+            Filter = "Collection files (*.json)|*.json|All files (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            return;
+
+        CollectionStatus = "Importing collection...";
+        try
+        {
+            var result = await _collectionService.ImportCollectionAsync(dialog.FileName, _modsFolder);
+            var msg = $"Found {result.AlreadyInstalled.Count} already installed, {result.ImportedMods.Count} new, {result.MissingFromDisk.Count} missing";
+            CollectionStatus = msg;
+            System.Windows.MessageBox.Show(msg, "Collection Import", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            CollectionStatus = $"Import failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task ExportCollectionWithFilesAsync()
+    {
+        if (string.IsNullOrEmpty(_modsFolder))
+        {
+            CollectionStatus = "Mods folder not available";
+            return;
+        }
+
+        var dialog = new System.Windows.Forms.SaveFileDialog
+        {
+            Title = "Export Mod Collection with Files",
+            Filter = "Zip archives (*.zip)|*.zip",
+            FileName = $"mod-collection-{DateTime.Now:yyyyMMdd-HHmmss}.zip"
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            return;
+
+        CollectionStatus = "Exporting collection with files...";
+        try
+        {
+            var mods = await _modDiscovery.ScanModsFolderAsync(_modsFolder);
+            await _collectionService.ExportCollectionWithFilesAsync(mods, dialog.FileName, _modsFolder);
+            CollectionStatus = $"Exported {mods.Count} mods to {Path.GetFileName(dialog.FileName)}";
+        }
+        catch (Exception ex)
+        {
+            CollectionStatus = $"Export failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task ImportCollectionWithFilesAsync()
+    {
+        var dialog = new System.Windows.Forms.OpenFileDialog
+        {
+            Title = "Import Mod Collection with Files",
+            Filter = "Zip archives (*.zip)|*.zip",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            return;
+
+        if (string.IsNullOrEmpty(_modsFolder))
+        {
+            CollectionStatus = "Mods folder not available";
+            return;
+        }
+
+        CollectionStatus = "Importing collection with files...";
+        try
+        {
+            var progress = new Progress<double>(p => CollectionStatus = $"Importing... {p * 100:F0}%");
+            await _collectionService.ImportCollectionWithFilesAsync(dialog.FileName, _modsFolder, progress);
+            CollectionStatus = "Collection imported successfully";
+            System.Windows.MessageBox.Show("Mods have been extracted to the mods folder.", "Collection Import",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            CollectionStatus = $"Import failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     public async Task RestoreBackupAsync()
     {
         var dialog = new System.Windows.Forms.OpenFileDialog
@@ -251,3 +391,4 @@ public partial class StorageLocationViewModel : ObservableObject
     [ObservableProperty]
     private string _freeSpace = "Unknown";
 }
+

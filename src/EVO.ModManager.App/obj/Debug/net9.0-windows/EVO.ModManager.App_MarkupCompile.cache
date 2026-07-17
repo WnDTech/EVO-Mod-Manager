@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\App.xaml
-71739478818
+8-370189833
 
-191874679063
-224264301203
-Styles\DarkTheme.xaml;Views\BrowseView.xaml;Views\ConflictView.xaml;Views\ConverterView.xaml;Views\MainWindow.xaml;Views\ProfileView.xaml;Views\SettingsView.xaml;
+21-684423123
+225-754636056
+Styles\DarkTheme.xaml;Views\BrowseView.xaml;Views\ConflictView.xaml;Views\ConverterView.xaml;Views\InputDialog.xaml;Views\MainWindow.xaml;Views\ProfileView.xaml;Views\SettingsView.xaml;
 
 False
 

@@ -72,3 +72,13 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj\Debug\net9.0-windows\EVO.ModManager.App.pdb
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj\Debug\net9.0-windows\EVO.ModManager.App.genruntimeconfig.cache
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj\Debug\net9.0-windows\ref\EVO.ModManager.App.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj\Debug\net9.0-windows\Views\InputDialog.baml
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj\Debug\net9.0-windows\Views\InputDialog.g.cs
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\SkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\osx\native\libSkiaSharp.dylib
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-arm64\native\libSkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-arm64\native\libSkiaSharp.pdb
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x64\native\libSkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x64\native\libSkiaSharp.pdb
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x86\native\libSkiaSharp.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\runtimes\win-x86\native\libSkiaSharp.pdb

@@ -6,6 +6,7 @@ using EVO.ModManager.App.Views;
 using EVO.ModManager.Core.Data;
 using EVO.ModManager.Core.Services.Implementations;
 using EVO.ModManager.Core.Services.Interfaces;
+using EVO.ModManager.Core.Services.Implementations;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -35,6 +36,12 @@ public partial class App : System.Windows.Application
         var services = new ServiceCollection();
         RegisterServices(services);
         _serviceProvider = services.BuildServiceProvider();
+
+        if (e.Args.Length > 0 && e.Args[0].EndsWith(".kspkg", StringComparison.OrdinalIgnoreCase))
+        {
+            HandleKspkgFile(e.Args[0]);
+            return;
+        }
 
         // Create MainWindow manually so DataContext is set before window is shown
         var mainVm = _serviceProvider.GetRequiredService<MainViewModel>();
@@ -70,6 +77,35 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
     }
 
+    private void HandleKspkgFile(string kspkgPath)
+    {
+        var installer = _serviceProvider!.GetRequiredService<KspkgInstallService>();
+        try
+        {
+            var task = installer.InstallAsync(kspkgPath);
+            var modName = task.GetAwaiter().GetResult();
+            Log.Information("KSPKG installed from command line: {ModName}", modName);
+            System.Windows.MessageBox.Show(
+                $"Mod \"{modName}\" installed successfully.",
+                "EVO Mod Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to install KSPKG from command line: {Path}", kspkgPath);
+            System.Windows.MessageBox.Show(
+                $"Failed to install mod.\n\n{ex.Message}",
+                "EVO Mod Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            Shutdown();
+        }
+    }
+
     private void RegisterServices(IServiceCollection services)
     {
         var appData = Path.Combine(
@@ -86,10 +122,16 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IProfileService, ProfileService>();
         services.AddSingleton<IConflictDetectionService, ConflictDetectionService>();
         services.AddSingleton<IBackupService, BackupService>();
+        services.AddSingleton<ICollectionService, CollectionService>();
         services.AddSingleton<IModBrowserService, ModBrowserService>();
         services.AddSingleton<IModConverterService, ModConverterService>();
         services.AddSingleton<IEditorService, EditorService>();
         services.AddSingleton<ILiveryLabService, LiveryLabService>();
+        services.AddSingleton<IUrlInstallService, UrlInstallService>();
+        services.AddSingleton<IDependencyService, DependencyService>();
+        services.AddSingleton<IContentExtractorService, ContentExtractorService>();
+        services.AddSingleton<ITextureConverterService, TextureConverterService>();
+        services.AddSingleton<KspkgInstallService>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
@@ -129,5 +171,7 @@ public partial class App : System.Windows.Application
         }
     }
 }
+
+
 
 
