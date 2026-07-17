@@ -60,6 +60,21 @@ public class ArchiveService : IArchiveService
                     result.HasCardesign = true;
                     result.CardesignFiles.Add(entry.Key ?? "");
                 }
+
+                // AC mod detection
+                var keyLower = (entry.Key ?? "").ToLowerInvariant();
+                if (keyLower.StartsWith("content/cars/") || keyLower.StartsWith("content/tracks/") ||
+                    keyLower.Contains("/content/cars/") || keyLower.Contains("/content/tracks/"))
+                {
+                    result.IsAcMod = true;
+                }
+                if (ext.Equals(".kn5", StringComparison.OrdinalIgnoreCase) ||
+                    ext.Equals(".kn5") ||
+                    keyLower.Contains("ui_car.json") ||
+                    keyLower.Contains("ui_track.json"))
+                {
+                    result.IsAcMod = true;
+                }
             }
 
             result.SuggestedModName = GuessModName(archivePath, rootDirs, rootFiles, result);
@@ -123,3 +138,4 @@ public class ArchiveService : IArchiveService
         return fileName;
     }
 }
+

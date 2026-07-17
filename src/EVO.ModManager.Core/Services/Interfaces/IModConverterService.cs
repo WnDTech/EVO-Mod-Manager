@@ -11,6 +11,8 @@ public class ConversionResult
 public interface IModConverterService
 {
     bool IsSdkAvailable { get; }
+    bool IsEvoForgeAvailable { get; }
+    bool CanConvert { get; }
     Task<ConversionResult> ConvertAcModAsync(string sourcePath, string outputDir,
         IProgress<double>? progress = null, CancellationToken ct = default);
 }

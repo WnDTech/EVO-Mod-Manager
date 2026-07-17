@@ -206,6 +206,22 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        // AC mod detected — route to converter
+        if (analysis.IsAcMod)
+        {
+            StatusText = "AC mod detected — launching converter...";
+            var convResult = await _converterService.ConvertAcModAsync(archivePath, "");
+            if (convResult.Success)
+            {
+                StatusText = convResult.ErrorMessage ?? "Converter launched";
+            }
+            else
+            {
+                StatusText = convResult.ErrorMessage ?? "No converter available";
+            }
+            return;
+        }
+
         if (!analysis.HasKspkg)
         {
             StatusText = $"No .kspkg files found in {Path.GetFileName(archivePath)}";
@@ -381,4 +397,6 @@ public partial class MainViewModel : ObservableObject
         : Mods.Where(m => m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
                        || (m.Author?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true));
 }
+
+
 

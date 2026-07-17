@@ -7,8 +7,7 @@
         MinWidth="900" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         AllowDrop="True" Drop="OnDrop"
-        Background="#0D0D1A" Foreground="#CCCCCC"
-        SnapsToDevicePixels="True" UseLayoutRounding="True">
+        Background="#0D0D1A" Foreground="#CCCCCC">
 
     <Window.Resources>
         <conv:BoolToStatusTextConverter x:Key="StatusText"/>
@@ -16,37 +15,127 @@
         <conv:BoolToStatusColorConverter x:Key="StatusColor"/>
         <conv:BytesToSizeConverter x:Key="BytesSize"/>
         <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
+
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="#1A1A3E"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="BorderBrush" Value="#2A2A50"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0" Background="#0A0A14" BorderBrush="#1A1A30" BorderThickness="0,0,1,0">
-            <StackPanel Margin="0,12,0,0">
-                <Button Width="50" Height="44" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="Installed Mods" Command="{Binding NavigateToModsCommand}">
-                    <TextBlock Text="📦" FontSize="18" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Width="50" Height="44" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="Browse" Command="{Binding OpenBrowseCommand}">
-                    <TextBlock Text="🌐" FontSize="18" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Width="50" Height="44" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        Command="{Binding OpenProfilesCommand}" ToolTip="Profiles">
-                    <TextBlock Text="📋" FontSize="18" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Width="50" Height="44" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="Settings" Command="{Binding OpenSettingsCommand}">
-                    <TextBlock Text="⚙" FontSize="18" HorizontalAlignment="Center"/>
-                </Button>
-                <Button Width="50" Height="44" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="ACE Editor" IsEnabled="{Binding IsEditorAvailable}" Command="{Binding LaunchEditorCommand}">
-                    <TextBlock Text="🔧" FontSize="18" HorizontalAlignment="Center"/>
-                </Button>
-            </StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="#111128" BorderBrush="#1A1A30" BorderThickness="0,0,0,1">
+                    <TextBlock Text="ACE Mod Manager" FontSize="14" FontWeight="SemiBold" Foreground="#E94560"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="NAVIGATION" FontSize="9" Foreground="#5555AA" Margin="16,12,0,6" FontWeight="Bold"/>
+                    <Button Command="{Binding NavigateToModsCommand}" Background="Transparent" BorderThickness="0"
+                            Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="0">
+                        <Border Padding="16,0" Height="36" Background="#1A1A30">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📦" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Installed Mods" FontSize="13" Foreground="#CCCCCC"/>
+                                    <TextBlock Text="Browse and manage your mods" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                    <Button Command="{Binding OpenBrowseCommand}" Background="Transparent" BorderThickness="0"
+                            Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="0">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🌐" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Download Mods" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Browse OverTake.gg" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                    <Button Command="{Binding OpenProfilesCommand}" Background="Transparent" BorderThickness="0"
+                            Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="0">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Profiles" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Save mod configurations" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" VerticalAlignment="Bottom">
+                    <TextBlock Text="TOOLS" FontSize="9" Foreground="#5555AA" Margin="16,0,0,6" FontWeight="Bold"/>
+                    <Button Command="{Binding InstallArchiveCommand}" Background="Transparent" BorderThickness="0"
+                            Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="0">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📥" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Install from PC" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Import .zip / .7z / .rar" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                    <Button Command="{Binding LaunchEditorCommand}" IsEnabled="{Binding IsEditorAvailable}"
+                            Background="Transparent" BorderThickness="0"
+                            Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="0">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔧" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="ACE Editor" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Launch official editor" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                    <Button Command="{Binding OpenSettingsCommand}" Background="Transparent" BorderThickness="0"
+                            Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="0">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚙" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Settings" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Paths, storage, tools" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                </StackPanel>
+
+                <Border Grid.Row="3" Background="#0D0D1A" BorderBrush="#1A1A30" BorderThickness="0,1,0,0" Padding="12,10" Margin="0,8,0,0">
+                    <StackPanel>
+                        <Button Command="{Binding LaunchGameCommand}"
+                                Background="#E94560" Foreground="White" BorderThickness="0"
+                                Padding="0" FontSize="12" FontWeight="SemiBold"
+                                Height="36" Cursor="Hand" Content="▶  Play ACE EVO"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <Grid Grid.Column="1">
@@ -59,18 +148,12 @@
             <Border Grid.Row="0" Background="#111128" BorderBrush="#1A1A30" BorderThickness="0,0,0,1" Padding="16,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold"
-                               Foreground="#E94560">EVO Mod Manager</TextBlock>
-                    <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Width="220" Height="26" Background="#1A1A3E" Foreground="#CCCCCC" BorderBrush="#2A2A50"
-                             FontSize="12" Padding="8,2" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                    <Button Grid.Column="2" Content="▶ Play" Command="{Binding LaunchGameCommand}"
-                            Background="#E94560" Foreground="White" BorderThickness="0"
-                            Padding="16,6" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Cursor="Hand"/>
+                    <TextBox Grid.Column="0" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Width="240" Height="26" Background="#1A1A3E" Foreground="#CCCCCC" BorderBrush="#2A2A50"
+                             FontSize="12" Padding="8,2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 </Grid>
             </Border>
 
@@ -207,4 +290,3 @@
         </Grid>
     </Grid>
 </Window>
-
