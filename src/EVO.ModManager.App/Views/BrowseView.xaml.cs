@@ -10,9 +10,16 @@ public partial class BrowseView : System.Windows.Controls.UserControl
         DataContext = viewModel;
         Loaded += async (s, e) =>
         {
-            await viewModel.LoadSourcesCommand.ExecuteAsync(null);
-            if (viewModel.FetchModsCommand.CanExecute(null))
-                await viewModel.FetchModsCommand.ExecuteAsync(null);
+            try
+            {
+                await viewModel.LoadSourcesCommand.ExecuteAsync(null);
+                if (viewModel.FetchModsCommand.CanExecute(null))
+                    await viewModel.FetchModsCommand.ExecuteAsync(null);
+            }
+            catch
+            {
+                // ViewModel handles its own errors
+            }
         };
     }
 }

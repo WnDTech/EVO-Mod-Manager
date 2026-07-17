@@ -78,11 +78,18 @@ public partial class BrowseViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadSourcesAsync()
     {
-        var sources = await _browserService.GetSourcesAsync();
+        try
+        {
+            var sources = await _browserService.GetSourcesAsync();
         Sources.Clear();
         foreach (var s in sources)
             Sources.Add(s);
         SelectedSource = Sources.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Failed to load sources: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -205,6 +212,7 @@ public partial class BrowseViewModel : ObservableObject
         }
     }
 }
+
 
 
 

@@ -82,20 +82,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#1A1A3E"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A2A5A"/>
-                </Trigger>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#3A3A7A"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+
     </Window.Resources>
 
     <Grid>
@@ -373,6 +360,8 @@
         </Grid>
     </Grid>
 </Window>
+
+
 
 
 
