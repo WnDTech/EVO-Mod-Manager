@@ -226,7 +226,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <TextBlock Text="Filter:" FontSize="11" Foreground="#6666AA" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox ItemsSource="{Binding ModTypeOptions}" SelectedItem="{Binding SelectedModType}" Width="110" Height="24"/>
+                                <ComboBox ItemsSource="{Binding ModTypeOptions}" SelectedItem="{Binding SelectedModType}" DisplayMemberPath="Name" Width="110" Height="24"/>
                             </StackPanel>
                             <Button Grid.Column="2" Command="{Binding RefreshModsCommand}" Content="↻ Refresh"
                                     Background="#1E1E3E" Foreground="#AAAAAA" BorderBrush="#2A2A50" BorderThickness="1"
@@ -364,6 +364,7 @@
         </Grid>
     </Grid>
 </Window>
+
 
 
 

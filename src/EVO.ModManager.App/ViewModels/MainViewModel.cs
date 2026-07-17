@@ -86,12 +86,17 @@ public partial class MainViewModel : ObservableObject
     private bool _isConverterAvailable;
 
     [ObservableProperty]
-    private ModType _selectedModType = ModType.Unknown;
+    private ModTypeFilterItem _selectedModType = new() { Name = "All Types", Value = ModType.Unknown };
 
-    public List<ModType> ModTypeOptions { get; } = new()
+    public List<ModTypeFilterItem> ModTypeOptions { get; } = new()
     {
-        ModType.Unknown, ModType.Car, ModType.Track, ModType.Skin,
-        ModType.Sound, ModType.App, ModType.Misc
+        new() { Name = "All Types", Value = ModType.Unknown },
+        new() { Name = "Car", Value = ModType.Car },
+        new() { Name = "Track", Value = ModType.Track },
+        new() { Name = "Skin", Value = ModType.Skin },
+        new() { Name = "Sound", Value = ModType.Sound },
+        new() { Name = "App", Value = ModType.App },
+        new() { Name = "Misc", Value = ModType.Misc },
     };
 
     [ObservableProperty]
@@ -105,8 +110,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedNavItem;
 
-    partial void OnSelectedModTypeChanged(ModType value) => OnPropertyChanged(nameof(FilteredMods));
-
+    
     partial void OnSelectedNavItemChanged(string value)
     {
         OnPropertyChanged(nameof(IsModsViewVisible));
@@ -467,9 +471,9 @@ public partial class MainViewModel : ObservableObject
     {
         get
         {
-            var filtered = SelectedModType == ModType.Unknown
+            var filtered = SelectedModType.Value == ModType.Unknown
                 ? Mods
-                : Mods.Where(m => m.ModType == SelectedModType);
+                : Mods.Where(m => m.ModType == SelectedModType.Value);
             if (!string.IsNullOrWhiteSpace(SearchText))
                 filtered = filtered.Where(m =>
                     m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
@@ -478,17 +482,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

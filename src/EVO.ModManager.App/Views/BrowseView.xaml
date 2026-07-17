@@ -43,7 +43,7 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Category:" FontSize="12" Foreground="#6666AA" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name"
                                       Width="130" Height="28"
                                       Background="#1A1A3E" Foreground="#CCCCCC" BorderBrush="#2A2A50" FontSize="12"/>
                         </StackPanel>
@@ -138,4 +138,5 @@
         </Grid>
     </Grid>
 </UserControl>
+
 
