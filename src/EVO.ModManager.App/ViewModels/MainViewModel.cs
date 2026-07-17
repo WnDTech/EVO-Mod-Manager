@@ -343,10 +343,15 @@ public partial class MainViewModel : ObservableObject
             else
             {
                 var sourcePath = Path.Combine(_modsFolder, mod.FileName);
+                var destPath = Path.Combine(disabledDir, mod.FileName);
                 if (File.Exists(sourcePath))
                 {
-                    var destPath = Path.Combine(disabledDir, mod.FileName);
                     File.Move(sourcePath, destPath);
+                    mod.DisabledPath = destPath;
+                }
+                else if (Directory.Exists(sourcePath))
+                {
+                    Directory.Move(sourcePath, destPath);
                     mod.DisabledPath = destPath;
                 }
             }
@@ -361,11 +366,19 @@ public partial class MainViewModel : ObservableObject
                     Path.GetFileNameWithoutExtension(mod.FileName),
                     mod.SymlinkTarget);
             }
-            else if (!string.IsNullOrEmpty(mod.DisabledPath) && File.Exists(mod.DisabledPath))
+            else if (!string.IsNullOrEmpty(mod.DisabledPath))
             {
                 var destPath = Path.Combine(_modsFolder, mod.FileName);
-                File.Move(mod.DisabledPath, destPath);
-                mod.DisabledPath = null;
+                if (File.Exists(mod.DisabledPath))
+                {
+                    File.Move(mod.DisabledPath, destPath);
+                    mod.DisabledPath = null;
+                }
+                else if (Directory.Exists(mod.DisabledPath))
+                {
+                    Directory.Move(mod.DisabledPath, destPath);
+                    mod.DisabledPath = null;
+                }
             }
 
             mod.IsEnabled = true;
@@ -386,14 +399,25 @@ public partial class MainViewModel : ObservableObject
             ? Path.Combine(_modsFolder, mod.FileName)
             : mod.DisabledPath;
 
-        if (filePath != null && File.Exists(filePath))
+        if (filePath != null)
         {
-            File.Delete(filePath);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            else if (Directory.Exists(filePath))
+            {
+                Directory.Delete(filePath, recursive: true);
+            }
             var sidecarPath = Path.Combine(
-                Path.GetDirectoryName(filePath)!,
+                Path.GetDirectoryName(filePath) ?? _modsFolder,
                 $"{Path.GetFileNameWithoutExtension(mod.FileName)}.evomanifest.json");
             if (File.Exists(sidecarPath))
                 File.Delete(sidecarPath);
+            var dir = Path.GetDirectoryName(filePath) ?? _modsFolder;
+            var manifestPath = Path.Combine(dir, $"{Path.GetFileNameWithoutExtension(mod.FileName)}.evomanifest.json");
+            if (File.Exists(manifestPath))
+                File.Delete(manifestPath);
         }
 
         Mods.Remove(mod);
@@ -454,6 +478,8 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
+
 
 
 
