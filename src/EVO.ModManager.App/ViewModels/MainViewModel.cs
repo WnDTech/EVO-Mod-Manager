@@ -223,6 +223,7 @@ public partial class MainViewModel : ObservableObject
             if (convResult.Success)
             {
                 StatusText = convResult.ErrorMessage ?? "Converter launched";
+                await RefreshModsAsync();
             }
             else
             {
@@ -453,6 +454,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
 
 
 
