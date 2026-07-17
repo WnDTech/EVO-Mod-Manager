@@ -53,8 +53,8 @@ public partial class MainViewModel : ObservableObject
         _conflictService = conflictService;
 
         _selectedNavItem = NavItems[0];
-    }
 
+    }
     [ObservableProperty]
     private ObservableCollection<Mod> _mods = new();
 
@@ -85,18 +85,21 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isConverterAvailable;
 
-    [ObservableProperty]
-    private ModTypeFilterItem _selectedModType = new() { Name = "All Types", Value = ModType.Unknown };
+    private string _selectedModTypeFilter = "All Types";
 
-    public List<ModTypeFilterItem> ModTypeOptions { get; } = new()
+    public string SelectedModTypeFilter
     {
-        new() { Name = "All Types", Value = ModType.Unknown },
-        new() { Name = "Car", Value = ModType.Car },
-        new() { Name = "Track", Value = ModType.Track },
-        new() { Name = "Skin", Value = ModType.Skin },
-        new() { Name = "Sound", Value = ModType.Sound },
-        new() { Name = "App", Value = ModType.App },
-        new() { Name = "Misc", Value = ModType.Misc },
+        get => _selectedModTypeFilter;
+        set
+        {
+            if (SetProperty(ref _selectedModTypeFilter, value))
+                OnPropertyChanged(nameof(FilteredMods));
+        }
+    }
+
+    public List<string> ModTypeOptions { get; } = new()
+    {
+        "All Types", "Car", "Track", "Skin", "Sound", "App", "Misc"
     };
 
     [ObservableProperty]
@@ -471,9 +474,9 @@ public partial class MainViewModel : ObservableObject
     {
         get
         {
-            var filtered = SelectedModType.Value == ModType.Unknown
+            var filtered = SelectedModTypeFilter == "All Types"
                 ? Mods
-                : Mods.Where(m => m.ModType == SelectedModType.Value);
+                : Mods.Where(m => m.ModType.ToString() == SelectedModTypeFilter);
             if (!string.IsNullOrWhiteSpace(SearchText))
                 filtered = filtered.Where(m =>
                     m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
@@ -482,6 +485,8 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
+
 
 
 

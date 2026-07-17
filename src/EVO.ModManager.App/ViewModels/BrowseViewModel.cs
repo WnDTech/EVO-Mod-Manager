@@ -53,20 +53,14 @@ public partial class BrowseViewModel : ObservableObject
     private double _downloadProgress;
 
     [ObservableProperty]
-    private ModTypeFilterItem _selectedCategory = new() { Name = "All Types", Value = ModType.Unknown };
+    private string _selectedCategory = "All Types";
 
     [ObservableProperty]
     private ModSource? _selectedSource;
 
-    public List<ModTypeFilterItem> Categories { get; } = new()
+    public List<string> Categories { get; } = new()
     {
-        new() { Name = "All Types", Value = ModType.Unknown },
-        new() { Name = "Car", Value = ModType.Car },
-        new() { Name = "Track", Value = ModType.Track },
-        new() { Name = "Skin", Value = ModType.Skin },
-        new() { Name = "Sound", Value = ModType.Sound },
-        new() { Name = "App", Value = ModType.App },
-        new() { Name = "Misc", Value = ModType.Misc },
+        "All Types", "Car", "Track", "Skin", "Sound", "App", "Misc"
     };
 
     partial void OnSelectedSourceChanged(ModSource? value)
@@ -74,7 +68,7 @@ public partial class BrowseViewModel : ObservableObject
         if (value != null) _ = FetchModsAsync();
     }
 
-    partial void OnSelectedCategoryChanged(ModTypeFilterItem value)
+    partial void OnSelectedCategoryChanged(string value)
     {
         _ = FetchModsAsync();
     }
@@ -102,7 +96,7 @@ public partial class BrowseViewModel : ObservableObject
         {
             var mods = await _browserService.FetchModListAsync(
                 SelectedSource.Id,
-                SelectedCategory.Value == ModType.Unknown ? null : SelectedCategory.Value);
+                SelectedCategory == "All Types" || SelectedCategory == null ? null : (ModType?)Enum.Parse(typeof(ModType), SelectedCategory));
 
             Mods.Clear();
             foreach (var mod in mods)
@@ -211,5 +205,7 @@ public partial class BrowseViewModel : ObservableObject
         }
     }
 }
+
+
 
 
