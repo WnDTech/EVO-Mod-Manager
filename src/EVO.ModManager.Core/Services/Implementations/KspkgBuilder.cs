@@ -11,8 +11,11 @@ public class KspkgBuilder : IDisposable
     private long _currentOffset;
 
     private const ulong KEY = 0x9F9721A97D1135C1;
-    private const long FILE_TABLE_SIZE = 0x2000000; // 32MB
+    private const long FILE_TABLE_SIZE = 0x4000000; // 64MB (required for ACE EVO v0.7+)
     private const int ENTRY_SIZE = 0x100;  // 256 bytes per entry
+
+    // ACE EVO v0.7+ uses 64MB file table = 262144 max entries
+    
 
     public KspkgBuilder(string outputPath)
     {
@@ -136,4 +139,6 @@ public class KspkgBuilder : IDisposable
         public ushort Flags;
     }
 }
+
+
 
