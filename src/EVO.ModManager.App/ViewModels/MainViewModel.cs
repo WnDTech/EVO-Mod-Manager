@@ -371,6 +371,9 @@ public partial class MainViewModel : ObservableObject
     public void OpenSettings() => SelectedNavItem = "Settings";
 
     [RelayCommand]
+    public void OpenProfiles() => StatusText = "Profiles view coming soon";
+
+    [RelayCommand]
     public void OpenBrowse() => SelectedNavItem = "Browse";
 
     public IEnumerable<Mod> FilteredMods => string.IsNullOrWhiteSpace(SearchText)
@@ -378,3 +381,4 @@ public partial class MainViewModel : ObservableObject
         : Mods.Where(m => m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
                        || (m.Author?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true));
 }
+

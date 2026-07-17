@@ -6,8 +6,8 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\ob
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.AssemblyInfoInputs.cache
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.AssemblyInfo.cs
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.csproj.CoreCompileInputs.cache
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.sourcelink.json
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\refint\EVO.ModManager.Core.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.pdb
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\ref\EVO.ModManager.Core.dll
-C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\EVO.ModManager.Core.sourcelink.json
