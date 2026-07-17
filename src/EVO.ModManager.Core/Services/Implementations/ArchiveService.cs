@@ -32,8 +32,7 @@ public class ArchiveService : IArchiveService
 
         try
         {
-            using var stream = File.OpenRead(archivePath);
-            using var archive = ZipArchive.OpenArchive(stream);
+            using var archive = SharpCompress.Archives.ArchiveFactory.OpenArchive(archivePath, new SharpCompress.Readers.ReaderOptions());
 
             var rootDirs = new HashSet<string>();
             var rootFiles = new List<string>();
@@ -92,8 +91,7 @@ public class ArchiveService : IArchiveService
     {
         Directory.CreateDirectory(destinationDir);
 
-        using var stream = File.OpenRead(archivePath);
-        using var archive = ZipArchive.OpenArchive(stream);
+        using var archive = SharpCompress.Archives.ArchiveFactory.OpenArchive(archivePath, new SharpCompress.Readers.ReaderOptions());
         var totalEntries = archive.Entries.Count(e => !e.IsDirectory);
         var extracted = 0;
 
@@ -138,4 +136,6 @@ public class ArchiveService : IArchiveService
         return fileName;
     }
 }
+
+
 

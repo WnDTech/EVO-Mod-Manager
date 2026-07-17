@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EVO.ModManager.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a000d93d399d08cdbe4f7fe0b2ed16f8e60bed40")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c6c1304206b3166d4604e5b11e64baefbf3955b")]
 [assembly: System.Reflection.AssemblyProductAttribute("EVO.ModManager.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EVO.ModManager.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
