@@ -114,6 +114,28 @@
                             </StackPanel>
                         </Border>
                     </Button>
+                    <Button Command="{Binding OpenConverterCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Converter" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="AC-to-ACE conversion" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                    <Button Command="{Binding OpenConflictsCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                        <Border Padding="16,0" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚠" FontSize="14" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Conflicts" FontSize="13" Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Resolve mod conflicts" FontSize="9" Foreground="#6666AA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Button>
                     <Button Command="{Binding OpenSettingsCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
                         <Border Padding="16,0" Height="36">
                             <StackPanel Orientation="Horizontal">
@@ -276,6 +298,9 @@
                     </Grid>
                 </Grid>
 
+                <ContentControl Content="{Binding ProfileView}" Visibility="{Binding IsProfilesViewVisible, Converter={StaticResource BoolVis}}"/>
+                <ContentControl Content="{Binding ConverterView}" Visibility="{Binding IsConverterViewVisible, Converter={StaticResource BoolVis}}"/>
+                <ContentControl Content="{Binding ConflictView}" Visibility="{Binding IsConflictViewVisible, Converter={StaticResource BoolVis}}"/>
                 <ContentControl Content="{Binding SettingsView}" Visibility="{Binding IsSettingsViewVisible, Converter={StaticResource BoolVis}}"/>
                 <ContentControl Content="{Binding BrowseView}" Visibility="{Binding IsBrowseViewVisible, Converter={StaticResource BoolVis}}"/>
             </Grid>
@@ -300,3 +325,9 @@
         </Grid>
     </Grid>
 </Window>
+
+
+
+
+
+

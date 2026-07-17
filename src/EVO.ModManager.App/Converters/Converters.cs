@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Windows.Data;
+using System.Windows;
 using EVO.ModManager.Core.Models;
 
 namespace EVO.ModManager.App.Converters;
@@ -84,3 +85,57 @@ public class BytesToSizeConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }
+
+
+public class ConflictTypeToDescriptionConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is ConflictType type)
+            return type switch
+            {
+                ConflictType.NameCollision => "Name Collision",
+                ConflictType.HashMatch => "Hash Match",
+                ConflictType.SourceConflict => "Source Conflict",
+                _ => type.ToString()
+            };
+        return "Unknown";
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+public class ConflictResolutionToColorConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is ConflictType type)
+            return type switch
+            {
+                ConflictType.NameCollision => System.Windows.Media.Color.FromRgb(0xF3, 0x9C, 0x12),
+                ConflictType.HashMatch => System.Windows.Media.Color.FromRgb(0xE9, 0x45, 0x60),
+                ConflictType.SourceConflict => System.Windows.Media.Color.FromRgb(0xE7, 0x4C, 0x3C),
+                _ => System.Windows.Media.Color.FromRgb(0xA0, 0xA0, 0xA0)
+            };
+        return System.Windows.Media.Color.FromRgb(0xA0, 0xA0, 0xA0);
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+
+public class InverseBoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool b)
+            return b ? Visibility.Collapsed : Visibility.Visible;
+        return Visibility.Visible;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+

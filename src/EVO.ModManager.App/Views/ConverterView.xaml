@@ -1,0 +1,162 @@
+<UserControl x:Class="EVO.ModManager.App.Views.ConverterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:EVO.ModManager.App.Converters"
+             Background="#0D0D1A" Foreground="#CCCCCC">
+    <UserControl.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
+        <conv:BoolToStatusColorConverter x:Key="StatusColor"/>
+    </UserControl.Resources>
+    <ScrollViewer Background="Transparent" BorderThickness="0">
+        <StackPanel Margin="20">
+
+            <TextBlock Text="Converter" FontSize="18" FontWeight="Bold" Foreground="#E94560" Margin="0,0,0,16"/>
+
+            <!-- Tool Status -->
+            <Border Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Conversion Tools" FontSize="14" FontWeight="SemiBold" Foreground="#DDDDDD" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,24,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Grid.Column="0" Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Ellipse.Fill>
+                                    <SolidColorBrush Color="{Binding IsSdkAvailable, Converter={StaticResource StatusColor}}"/>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="ACE Editor SDK" FontSize="12" Foreground="#DDDDDD" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding IsSdkAvailable, StringFormat={}Available: {0}}" FontSize="11" Foreground="#6666AA"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse Grid.Column="0" Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Ellipse.Fill>
+                                    <SolidColorBrush Color="{Binding IsEvoForgeAvailable, Converter={StaticResource StatusColor}}"/>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="EvoForge" FontSize="12" Foreground="#DDDDDD" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding IsEvoForgeAvailable, StringFormat={}Available: {0}}" FontSize="11" Foreground="#6666AA"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- File Selection / Drop Zone -->
+            <Border Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="AC Mod Archive" FontSize="14" FontWeight="SemiBold" Foreground="#DDDDDD" Margin="0,0,0,8"/>
+
+                    <Border x:Name="DropZone" AllowDrop="True"
+                            Background="#1A1A44" BorderBrush="#2A2A5A" BorderThickness="2"
+                            CornerRadius="6" Padding="20" MinHeight="80"
+                            PreviewDragOver="DropZone_PreviewDragOver"
+                            Drop="DropZone_Drop">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock x:Name="DropText" Text="Drop AC mod archive here" FontSize="13"
+                                       Foreground="#6666AA" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding SourceFileName, FallbackValue='No file selected'}"
+                                       FontSize="12" Foreground="#BBBBCC" HorizontalAlignment="Center"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Command="{Binding SelectFileCommand}" Content="_Browse..."
+                            Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A4A"
+                            BorderThickness="1" Padding="14,5" FontSize="12" Margin="0,10,0,0"
+                            HorizontalAlignment="Left" Cursor="Hand"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Convert Button & Progress -->
+            <Border Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <Button Command="{Binding ConvertCommand}" Content="_Convert"
+                                    IsEnabled="{Binding CanConvert}"
+                                    Background="#E94560" Foreground="White" BorderThickness="0"
+                                    Padding="20,8" FontSize="13" FontWeight="Bold"
+                                    HorizontalAlignment="Left" Cursor="Hand"/>
+                            <TextBlock Text="{Binding OutputMessage}" FontSize="12" Foreground="#2ECC71"
+                                       Margin="0,6,0,0" Visibility="{Binding HasOutput, Converter={StaticResource BoolVis}}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Background="#181838" CornerRadius="4" Padding="8,6" Margin="0,10,0,0"
+                            Visibility="{Binding IsConverting, Converter={StaticResource BoolVis}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ProgressBar Value="{Binding ConversionProgress}" Height="14"
+                                         Foreground="#E94560" Background="#0D0D1A"
+                                         BorderBrush="#1E1E3E" BorderThickness="1"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ConversionProgress, StringFormat={}{0:F0}%}"
+                                       FontSize="11" Foreground="#6666AA" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Log Output -->
+            <Border Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Conversion Log" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#DDDDDD" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Command="{Binding ClearLogCommand}" Content="_Clear"
+                                Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A4A"
+                                BorderThickness="1" Padding="10,3" FontSize="11" Cursor="Hand"/>
+                    </Grid>
+
+                    <Border Background="#1A1A44" CornerRadius="4" Padding="8" Margin="0,8,0,0"
+                            MinHeight="120" MaxHeight="260">
+                        <ListBox ItemsSource="{Binding LogLines}" Background="Transparent"
+                                 BorderThickness="0" FontFamily="Consolas" FontSize="11"
+                                 Foreground="#BBBBCC">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="2,1"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

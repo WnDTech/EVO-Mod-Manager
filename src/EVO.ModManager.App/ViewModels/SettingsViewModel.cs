@@ -14,20 +14,27 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ILiveryLabService _liveryLabService;
     private readonly IEditorService _editorService;
     private readonly IModConverterService _converterService;
+    private readonly IBackupService _backupService;
+
+    private string _modsFolder = string.Empty;
 
     public SettingsViewModel(
         IStorageLocationService storageService,
         IGameDetectionService gameDetection,
         ILiveryLabService liveryLabService,
         IEditorService editorService,
-        IModConverterService converterService)
+        IModConverterService converterService,
+        IBackupService backupService)
     {
         _storageService = storageService;
         _gameDetection = gameDetection;
         _liveryLabService = liveryLabService;
         _editorService = editorService;
         _converterService = converterService;
+        _backupService = backupService;
     }
+
+    public void SetModsFolder(string path) => _modsFolder = path;
 
     [ObservableProperty]
     private ObservableCollection<StorageLocationViewModel> _storageLocations = new();
@@ -52,6 +59,9 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private string _backupStatus = string.Empty;
 
     [RelayCommand]
     public void Load()
@@ -159,6 +169,68 @@ public partial class SettingsViewModel : ObservableObject
             ? $"Available at {_liveryLabService.LiveryLabPath}"
             : "Download failed";
         StatusMessage = _liveryLabService.IsInstalled ? "LiveryLab installed" : "LiveryLab download failed";
+    }
+
+    [RelayCommand]
+    public async Task BackupAllAsync()
+    {
+        if (string.IsNullOrEmpty(_modsFolder) || !Directory.Exists(_modsFolder))
+        {
+            BackupStatus = "Mods folder not available";
+            return;
+        }
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var backupDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "EVO Mod Manager", "backups");
+        Directory.CreateDirectory(backupDir);
+        var destZip = Path.Combine(backupDir, $"mods-backup-{timestamp}.zip");
+
+        BackupStatus = "Creating backup...";
+        try
+        {
+            var progress = new Progress<double>(p => BackupStatus = $"Backing up... {p * 100:F0}%");
+            await _backupService.BackupFullAsync(_modsFolder, destZip, progress);
+            BackupStatus = $"Backup completed: {Path.GetFileName(destZip)}";
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"Backup failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task RestoreBackupAsync()
+    {
+        var dialog = new System.Windows.Forms.OpenFileDialog
+        {
+            Title = "Select a backup file to restore",
+            Filter = "Backup files (*.zip)|*.zip",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            return;
+
+        var backupZip = dialog.FileName;
+        if (string.IsNullOrEmpty(_modsFolder))
+        {
+            BackupStatus = "Mods folder not available";
+            return;
+        }
+
+        BackupStatus = "Restoring from backup...";
+        try
+        {
+            var progress = new Progress<double>(p => BackupStatus = $"Restoring... {p * 100:F0}%");
+            await _backupService.RestoreAsync(backupZip, _modsFolder, progress: progress);
+            BackupStatus = $"Restore completed from: {Path.GetFileName(backupZip)}";
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"Restore failed: {ex.Message}";
+        }
     }
 }
 

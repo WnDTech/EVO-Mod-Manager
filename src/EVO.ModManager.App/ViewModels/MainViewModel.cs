@@ -110,14 +110,23 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsModsViewVisible));
         OnPropertyChanged(nameof(IsSettingsViewVisible));
         OnPropertyChanged(nameof(IsBrowseViewVisible));
+        OnPropertyChanged(nameof(IsProfilesViewVisible));
+        OnPropertyChanged(nameof(IsConverterViewVisible));
+        OnPropertyChanged(nameof(IsConflictViewVisible));
     }
 
     public bool IsModsViewVisible => SelectedNavItem == "Mods";
     public bool IsSettingsViewVisible => SelectedNavItem == "Settings";
     public bool IsBrowseViewVisible => SelectedNavItem == "Browse";
+    public bool IsProfilesViewVisible => SelectedNavItem == "Profiles";
+    public bool IsConverterViewVisible => SelectedNavItem == "Converter";
+    public bool IsConflictViewVisible => SelectedNavItem == "Conflicts";
 
     public System.Windows.Controls.UserControl? SettingsView { get; set; }
     public System.Windows.Controls.UserControl? BrowseView { get; set; }
+    public System.Windows.Controls.UserControl? ProfileView { get; set; }
+    public System.Windows.Controls.UserControl? ConverterView { get; set; }
+    public System.Windows.Controls.UserControl? ConflictView { get; set; }
     public string ModsFolderForBrowse => _modsFolder;
 
     public async Task HandleDroppedFilesAsync(string[] files)
@@ -403,6 +412,20 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void OpenBrowse() => SelectedNavItem = "Browse";
 
+    [RelayCommand]
+    public void OpenConverter() => SelectedNavItem = "Converter";
+
+    [RelayCommand]
+    public void OpenConflicts() => SelectedNavItem = "Conflicts";
+
+    [RelayCommand]
+    public void ScanConflicts()
+    {
+        var conflicts = _conflictService.DetectConflicts(Mods.ToList());
+        ConflictCount = _conflictService.ConflictCount(Mods.ToList());
+        StatusText = $"{ConflictCount} conflicts detected";
+    }
+
     public IEnumerable<Mod> FilteredMods
     {
         get
@@ -418,6 +441,8 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
+
 
 
 

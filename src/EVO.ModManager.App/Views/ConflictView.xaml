@@ -1,0 +1,209 @@
+<UserControl x:Class="EVO.ModManager.App.Views.ConflictView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:EVO.ModManager.App.Converters"
+             Background="#0D0D1A" Foreground="#CCCCCC">
+    <UserControl.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
+        <conv:InverseBoolToVisibilityConverter x:Key="InvBoolVis"/>
+        <conv:ConflictTypeToDescriptionConverter x:Key="ConflictTypeDesc"/>
+        <conv:ConflictResolutionToColorConverter x:Key="ConflictTypeColor"/>
+    </UserControl.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#141430" BorderBrush="#1E1E3E" BorderThickness="1"
+                CornerRadius="8" Padding="16" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Conflict Resolution" FontSize="18" FontWeight="Bold"
+                           Foreground="#E94560" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" FontSize="12" Foreground="#F39C12" VerticalAlignment="Center"
+                           Margin="16,0,0,0">
+                    <Run Text="{Binding ConflictCount}"/><Run Text=" unresolved conflict(s)"/>
+                </TextBlock>
+                <Border Grid.Column="2" Background="#1A1A44" CornerRadius="4" Padding="8,4" Margin="0,0,8,0"
+                        Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="Scanning..." FontSize="11" Foreground="#6666AA"/>
+                </Border>
+                <Button Grid.Column="3" Command="{Binding ScanCommand}" Content="_Scan Now"
+                        Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A50"
+                        BorderThickness="1" Padding="14,5" FontSize="12"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="320"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#141430" BorderBrush="#1E1E3E"
+                    BorderThickness="1" CornerRadius="8" Margin="0,0,8,0">
+                <Grid>
+                    <ListBox ItemsSource="{Binding Conflicts}" SelectedItem="{Binding SelectedConflict}"
+                             Background="Transparent" BorderThickness="0" Padding="4"
+                             Visibility="{Binding HasConflicts, Converter={StaticResource BoolVis}}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12,8" Margin="0,0,0,4" CornerRadius="6"
+                                        Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding ModIdA}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="#CCCCCC"/>
+                                            <TextBlock Text=" vs " FontSize="12" Foreground="#6666AA" Margin="4,0"/>
+                                            <TextBlock Text="{Binding ModIdB}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="#CCCCCC"/>
+                                        </StackPanel>
+                                        <Border Grid.Row="0" Grid.Column="1" CornerRadius="3" Padding="6,2">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{Binding ConflictType, Converter={StaticResource ConflictTypeColor}}"/>
+                                            </Border.Background>
+                                            <TextBlock Text="{Binding ConflictType, Converter={StaticResource ConflictTypeDesc}}"
+                                                       FontSize="9" Foreground="White"/>
+                                        </Border>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Text="{Binding FilePath}" FontSize="10" Foreground="#6666AA"
+                                                   TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                    Orientation="Horizontal" Margin="0,4,0,0">
+                                            <TextBlock Text="Status: " FontSize="10" Foreground="#5555AA"/>
+                                            <TextBlock FontSize="10">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#F39C12"/>
+                                                        <Setter Property="Text" Value="Unresolved"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Resolution}" Value="Winner">
+                                                                <Setter Property="Foreground" Value="#2ECC71"/>
+                                                                <Setter Property="Text" Value="Resolved"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Resolution}" Value="Ignored">
+                                                                <Setter Property="Foreground" Value="#6666AA"/>
+                                                                <Setter Property="Text" Value="Ignored"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Text="No conflicts detected — click Scan Now" FontSize="13" Foreground="#6666AA"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding HasConflicts, Converter={StaticResource InvBoolVis}}"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Background="#141430" BorderBrush="#1E1E3E"
+                    BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="CONFLICT DETAILS" FontSize="9" Foreground="#5555AA" FontWeight="Bold"/>
+                    <Border Margin="0,10,0,0" Background="#16163A" BorderBrush="#1E1E3E"
+                            BorderThickness="1" CornerRadius="6" Padding="14" MinHeight="180">
+                        <StackPanel DataContext="{Binding SelectedConflict}">
+                            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#CCCCCC">
+                                <Run Text="{Binding ModIdA, TargetNullValue='—'}"/>
+                                <Run Text=" vs "/>
+                                <Run Text="{Binding ModIdB, TargetNullValue='—'}"/>
+                            </TextBlock>
+                            <Separator Background="#1E1E3E" Margin="0,8,0,8" Opacity="0.5"/>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="75"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Type:" FontSize="11" Foreground="#6666AA"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" FontSize="11" Foreground="#BBBBCC"
+                                           Text="{Binding ConflictType, Converter={StaticResource ConflictTypeDesc}}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="File:" FontSize="11" Foreground="#6666AA" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding FilePath}" FontSize="11"
+                                           Foreground="#BBBBCC" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Status:" FontSize="11" Foreground="#6666AA" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" FontSize="11" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#F39C12"/>
+                                            <Setter Property="Text" Value="Unresolved"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Resolution}" Value="Winner">
+                                                    <Setter Property="Foreground" Value="#2ECC71"/>
+                                                    <Setter Property="Text" Value="Resolved"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Resolution}" Value="Ignored">
+                                                    <Setter Property="Foreground" Value="#6666AA"/>
+                                                    <Setter Property="Text" Value="Ignored"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Resolved:" FontSize="11"
+                                           Foreground="#6666AA" Margin="0,4,0,0"
+                                           Visibility="{Binding ResolvedAt, Converter={StaticResource BoolVis}}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ResolvedAt, StringFormat={}{0:g}}"
+                                           FontSize="11" Foreground="#BBBBCC" Margin="0,4,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Margin="0,12,0,0" DataContext="{Binding SelectedConflict}">
+                        <TextBlock Text="Resolve Conflict" FontSize="11" Foreground="#5555AA" FontWeight="Bold" Margin="0,0,0,6"/>
+                        <Button Command="{Binding DataContext.ResolveKeepACommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Background="#1E3E1E" Foreground="#2ECC71" BorderBrush="#2A5A2A"
+                                BorderThickness="1" Padding="10,5" FontSize="11" Margin="0,0,0,4"
+                                HorizontalAlignment="Stretch" Cursor="Hand">
+                            <TextBlock TextAlignment="Center">
+                                <Run Text="_Keep "/><Run Text="{Binding ModIdA, TargetNullValue='A'}"/>
+                            </TextBlock>
+                        </Button>
+                        <Button Command="{Binding DataContext.ResolveKeepBCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Background="#1E3E1E" Foreground="#2ECC71" BorderBrush="#2A5A2A"
+                                BorderThickness="1" Padding="10,5" FontSize="11" Margin="0,0,0,4"
+                                HorizontalAlignment="Stretch" Cursor="Hand">
+                            <TextBlock TextAlignment="Center">
+                                <Run Text="_Keep "/><Run Text="{Binding ModIdB, TargetNullValue='B'}"/>
+                            </TextBlock>
+                        </Button>
+                        <Button Command="{Binding DataContext.IgnoreConflictCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Background="#2A2A1A" Foreground="#6666AA" BorderBrush="#3A3A2A"
+                                BorderThickness="1" Padding="10,5" FontSize="11" Margin="0,0,0,4"
+                                HorizontalAlignment="Stretch" Cursor="Hand">_Ignore</Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+
+

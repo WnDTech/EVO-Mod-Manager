@@ -113,6 +113,25 @@
                     <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#2ECC71" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
+
+            <Border Background="#16163A" BorderBrush="#1E1E3E" BorderThickness="1"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Backup &amp; Restore" FontSize="14" FontWeight="SemiBold" Foreground="#DDDDDD" Margin="0,0,0,6"/>
+                    <TextBlock Text="Create a full backup of all installed mods as a ZIP archive, or restore from a previously created backup file." FontSize="12" Foreground="#6666AA" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Command="{Binding BackupAllCommand}" Content="_Backup All Mods"
+                                Background="#E94560" Foreground="White" BorderThickness="0"
+                                Padding="12,6" FontSize="12" FontWeight="Bold" Margin="0,0,8,0"/>
+                        <Button Command="{Binding RestoreBackupCommand}" Content="_Restore from Backup"
+                                Background="#1E1E3E" Foreground="#CCCCCC" BorderBrush="#2A2A4A"
+                                BorderThickness="1" Padding="12,6" FontSize="12"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding BackupStatus}" FontSize="12" Foreground="#CCCCCC" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

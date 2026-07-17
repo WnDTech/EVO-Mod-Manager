@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using EVO.ModManager.App.Services;
 using EVO.ModManager.App.ViewModels;
@@ -28,28 +28,6 @@ public partial class App : System.Windows.Application
                 rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
             .WriteTo.Debug()
             .CreateLogger();
-
-        Log.Information("EVO Mod Manager v{Version} starting", AppVersion);
-
-        DispatcherUnhandledException += (s, e) =>
-        {
-            Log.Fatal(e.Exception, "Unhandled UI exception");
-            System.Windows.MessageBox.Show(
-                $"An unexpected error occurred:\n\n{e.Exception.Message}\n\nLogs: {Path.Combine(appData, "logs")}",
-                "EVO Mod Manager", MessageBoxButton.OK, MessageBoxImage.Error);
-            e.Handled = true;
-        };
-
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-        {
-            if (e.ExceptionObject is Exception ex) Log.Fatal(ex, "AppDomain exception");
-        };
-
-        TaskScheduler.UnobservedTaskException += (s, e) =>
-        {
-            Log.Fatal(e.Exception, "Task exception");
-            e.SetObserved();
-        };
     }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -64,10 +42,20 @@ public partial class App : System.Windows.Application
         mainWindow.DataContext = mainVm;
         Current.MainWindow = mainWindow;
 
-        mainVm.SettingsView = _serviceProvider.GetRequiredService<SettingsView>();
+                mainVm.SettingsView = _serviceProvider.GetRequiredService<SettingsView>();
         mainVm.BrowseView = _serviceProvider.GetRequiredService<BrowseView>();
+        mainVm.ProfileView = _serviceProvider.GetRequiredService<ProfileView>();
+        mainVm.ConverterView = _serviceProvider.GetRequiredService<ConverterView>();
+        mainVm.ConflictView = _serviceProvider.GetRequiredService<ConflictView>();
         var browseVm = _serviceProvider.GetRequiredService<BrowseViewModel>();
         browseVm.SetModsFolder(mainVm.ModsFolderForBrowse);
+        var settingsVm = _serviceProvider.GetRequiredService<SettingsViewModel>();
+        settingsVm.SetModsFolder(mainVm.ModsFolderForBrowse);
+        var profileVm = _serviceProvider.GetRequiredService<ProfileViewModel>();
+        profileVm.SetModsFolder(mainVm.ModsFolderForBrowse);
+        var conflictVm = _serviceProvider.GetRequiredService<ConflictViewModel>();
+        conflictVm.SetModsFolder(mainVm.ModsFolderForBrowse);
+        conflictVm.SetMods(mainVm.Mods.ToList());
 
         mainWindow.Loaded += async (s, args) =>
         {
@@ -82,21 +70,8 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    private void RegisterServices(IServiceCollection services)
     {
-        _serviceProvider?.Dispose();
-        Log.CloseAndFlush();
-        base.OnExit(e);
-    }
-
-    private void RegisterServices(ServiceCollection services)
-    {
-        var appData = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "EVO Mod Manager");
-
-        services.AddSingleton(new DatabaseContext(Path.Combine(appData, "evomm.db")));
-        services.AddSingleton<ModRepository>();
         services.AddSingleton<SettingsRepository>();
 
         services.AddSingleton<IGameDetectionService, GameDetectionService>();
@@ -113,10 +88,18 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<BrowseViewModel>();
+        services.AddSingleton<ProfileViewModel>();
+        services.AddSingleton<ConverterViewModel>();
+        services.AddSingleton<ConflictViewModel>();
 
         services.AddTransient<SettingsView>();
+                services.AddTransient<SettingsView>();
         services.AddTransient<BrowseView>();
+        services.AddTransient<ProfileView>();
+        services.AddTransient<ConverterView>();
+        services.AddTransient<ConflictView>();
     }
 
     private async Task CheckForUpdatesAsync()
@@ -127,17 +110,18 @@ public partial class App : System.Windows.Application
             var info = await updateService.CheckForUpdateAsync(AppVersion);
             if (info.HasUpdate && info.DownloadUrl != null)
             {
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    var result = System.Windows.MessageBox.Show(
-                        $"Version {info.LatestVersion} available.\n\nDownload now?",
-                        "Update Available", MessageBoxButton.YesNo, MessageBoxImage.Information);
-                    if (result == MessageBoxResult.Yes)
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        { UseShellExecute = true, FileName = info.DownloadUrl });
-                });
+                Log.Information("Update available: {Version} at {Url}", info.LatestVersion, info.DownloadUrl);
+                // Future: show update notification
+            }
+            else
+            {
+                Log.Information("No update available (current: {Version})", AppVersion);
             }
         }
-        catch (Exception ex) { Log.Warning(ex, "Update check failed"); }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to check for updates");
+        }
     }
 }
+
