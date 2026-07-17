@@ -219,7 +219,7 @@ public partial class MainViewModel : ObservableObject
         if (analysis.IsAcMod)
         {
             StatusText = "AC mod detected — launching converter...";
-            var convResult = await _converterService.ConvertAcModAsync(archivePath, "");
+            var convResult = await _converterService.ConvertAcModAsync(archivePath, _modsFolder);
             if (convResult.Success)
             {
                 StatusText = convResult.ErrorMessage ?? "Converter launched";
@@ -454,6 +454,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 }
+
 
 
 

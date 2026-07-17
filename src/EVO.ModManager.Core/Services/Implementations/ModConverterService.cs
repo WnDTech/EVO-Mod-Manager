@@ -20,6 +20,8 @@ public class ModConverterService : IModConverterService
         var aceModsFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "Saved Games", "ACE", "mods");
+        // Use outputDir if provided (from calling code)
+        aceModsFolder = !string.IsNullOrEmpty(outputDir) ? outputDir : aceModsFolder;
 
         Directory.CreateDirectory(tempDir);
 
@@ -171,4 +173,5 @@ public class ModConverterService : IModConverterService
         return null;
     }
 }
+
 
