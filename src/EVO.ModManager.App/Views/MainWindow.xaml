@@ -55,45 +55,29 @@
 
                 <StackPanel Grid.Row="1">
                     <TextBlock Text="NAVIGATION" FontSize="9" Foreground="#5555AA" Margin="16,12,0,6" FontWeight="Bold"/>
-                    <Button Command="{Binding NavigateToModsCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36" Background="#1A1A30">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📦" FontSize="14" VerticalAlignment="Center"/>
-                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="Installed Mods" FontSize="13" Foreground="#CCCCCC"/>
-                                    <TextBlock Text="Browse and manage" FontSize="9" Foreground="#6666AA"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+                    <Button Command="{Binding NavigateToModsCommand}" Background="#1A1A30" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📦" FontSize="13" VerticalAlignment="Center"/>
+                            <TextBlock Text="  Installed Mods" FontSize="12" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
                     </Button>
-                    <Button Command="{Binding OpenBrowseCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🌐" FontSize="14" VerticalAlignment="Center"/>
-                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="Download Mods" FontSize="13" Foreground="#AAAAAA"/>
-                                    <TextBlock Text="Browse OverTake.gg" FontSize="9" Foreground="#6666AA"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+                    <Button Command="{Binding OpenBrowseCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🌐" FontSize="13" VerticalAlignment="Center"/>
+                            <TextBlock Text="  Download Mods" FontSize="12" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
                     </Button>
-                    <Button Command="{Binding OpenProfilesCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
-                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="Profiles" FontSize="13" Foreground="#AAAAAA"/>
-                                    <TextBlock Text="Save mod configurations" FontSize="9" Foreground="#6666AA"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+                    <Button Command="{Binding OpenProfilesCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋" FontSize="13" VerticalAlignment="Center"/>
+                            <TextBlock Text="  Profiles" FontSize="12" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
                     </Button>
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" VerticalAlignment="Bottom">
                     <TextBlock Text="TOOLS" FontSize="9" Foreground="#5555AA" Margin="16,0,0,6" FontWeight="Bold"/>
-                    <Button Command="{Binding InstallArchiveCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
+                    <Button Command="{Binding InstallArchiveCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📥" FontSize="14" VerticalAlignment="Center"/>
                                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
@@ -101,10 +85,8 @@
                                     <TextBlock Text="Import .zip / .7z / .rar" FontSize="9" Foreground="#6666AA"/>
                                 </StackPanel>
                             </StackPanel>
-                        </Border>
-                    </Button>
-                    <Button Command="{Binding LaunchEditorCommand}" IsEnabled="{Binding IsEditorAvailable}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
+                        </Button>
+                    <Button Command="{Binding LaunchEditorCommand}" IsEnabled="{Binding IsEditorAvailable}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔧" FontSize="14" VerticalAlignment="Center"/>
                                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
@@ -112,10 +94,8 @@
                                     <TextBlock Text="Launch official editor" FontSize="9" Foreground="#6666AA"/>
                                 </StackPanel>
                             </StackPanel>
-                        </Border>
-                    </Button>
-                    <Button Command="{Binding OpenConverterCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
+                        </Button>
+                    <Button Command="{Binding OpenConverterCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔄" FontSize="14" VerticalAlignment="Center"/>
                                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
@@ -123,10 +103,8 @@
                                     <TextBlock Text="AC-to-ACE conversion" FontSize="9" Foreground="#6666AA"/>
                                 </StackPanel>
                             </StackPanel>
-                        </Border>
-                    </Button>
-                    <Button Command="{Binding OpenConflictsCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
+                        </Button>
+                    <Button Command="{Binding OpenConflictsCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚠" FontSize="14" VerticalAlignment="Center"/>
                                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
@@ -134,10 +112,8 @@
                                     <TextBlock Text="Resolve mod conflicts" FontSize="9" Foreground="#6666AA"/>
                                 </StackPanel>
                             </StackPanel>
-                        </Border>
-                    </Button>
-                    <Button Command="{Binding OpenSettingsCommand}" Background="Transparent" BorderThickness="0" Height="36" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                        <Border Padding="16,0" Height="36">
+                        </Button>
+                    <Button Command="{Binding OpenSettingsCommand}" Background="Transparent" BorderThickness="0" Height="34" Cursor="Hand" HorizontalContentAlignment="Stretch" Padding="16,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚙" FontSize="14" VerticalAlignment="Center"/>
                                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
@@ -145,8 +121,7 @@
                                     <TextBlock Text="Paths, storage, tools" FontSize="9" Foreground="#6666AA"/>
                                 </StackPanel>
                             </StackPanel>
-                        </Border>
-                    </Button>
+                        </Button>
                 </StackPanel>
 
                 <Border Grid.Row="3" Background="#0D0D1A" BorderBrush="#1A1A30" BorderThickness="0,1,0,0" Padding="12,10" Margin="0,8,0,0">
@@ -325,6 +300,11 @@
         </Grid>
     </Grid>
 </Window>
+
+
+
+
+
 
 
 
