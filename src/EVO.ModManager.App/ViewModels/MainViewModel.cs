@@ -84,6 +84,15 @@ public partial class MainViewModel : ObservableObject
     private bool _isConverterAvailable;
 
     [ObservableProperty]
+    private ModType _selectedModType = ModType.Unknown;
+
+    public List<ModType> ModTypeOptions { get; } = new()
+    {
+        ModType.Unknown, ModType.Car, ModType.Track, ModType.Skin,
+        ModType.Sound, ModType.App, ModType.Misc
+    };
+
+    [ObservableProperty]
     private string _searchText = string.Empty;
 
     public List<string> NavItems { get; } = new()
@@ -93,6 +102,8 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _selectedNavItem;
+
+    partial void OnSelectedModTypeChanged(ModType value) => OnPropertyChanged(nameof(FilteredMods));
 
     partial void OnSelectedNavItemChanged(string value)
     {
@@ -392,11 +403,24 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void OpenBrowse() => SelectedNavItem = "Browse";
 
-    public IEnumerable<Mod> FilteredMods => string.IsNullOrWhiteSpace(SearchText)
-        ? Mods
-        : Mods.Where(m => m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                       || (m.Author?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true));
+    public IEnumerable<Mod> FilteredMods
+    {
+        get
+        {
+            var filtered = SelectedModType == ModType.Unknown
+                ? Mods
+                : Mods.Where(m => m.ModType == SelectedModType);
+            if (!string.IsNullOrWhiteSpace(SearchText))
+                filtered = filtered.Where(m =>
+                    m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    (m.Author?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true));
+            return filtered;
+        }
+    }
 }
+
+
+
 
 
 
