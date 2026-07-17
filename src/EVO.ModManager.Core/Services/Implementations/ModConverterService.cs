@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Serilog;
+using System.Linq;
 using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
 
@@ -18,14 +18,17 @@ public class ModConverterService : IModConverterService
     {
         var modId = Guid.NewGuid().ToString("N")[..8];
         var tempDir = Path.Combine(Path.GetTempPath(), "EVOMM", "convert", modId);
-        var aceModsFolder = !string.IsNullOrEmpty(outputDir) ? outputDir
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "ACE", "mods");
+
+        // Output goes to ACE content overlay folder (game reads from both content.kspkg AND content/)
+        var aceContentFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "Saved Games", "ACE", "content");
 
         Directory.CreateDirectory(tempDir);
 
         try
         {
-            Log.Information("=== AC-to-ACE Converter ===");
+            Log.Information("=== AC-to-ACE Converter (content overlay mode) ===");
             Log.Information("Source: {Source}", sourcePath);
 
             // Step 1: Extract archive
@@ -33,76 +36,82 @@ public class ModConverterService : IModConverterService
             var archiveService = new ArchiveService();
             await archiveService.ExtractArchiveAsync(sourcePath, tempDir, null, ct);
 
-            // Step 2: Analyze structure
+            // Step 2: Analyze mod structure
             progress?.Report(0.3);
-            var (modType, modName, contentDir) = AnalyzeMod(tempDir, sourcePath);
+            var (modType, modName, contentDir, subDirs) = AnalyzeMod(tempDir, sourcePath);
+            Log.Information("  Type: {Type}, Name: {Name}, Subdirs: {Subs}", modType, modName, string.Join(", ", subDirs));
 
-            // Step 3: Copy to ACE-Modder Editor folder (so Editor can see it)
+            // Step 3: Copy files to ACE content overlay folder
             progress?.Report(0.5);
-            var editorModsFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Saved Games", "ACE-Modder", "mods", modName);
-            Directory.CreateDirectory(editorModsFolder);
-
-            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+            var fileCount = 0;
+            foreach (var subDir in subDirs)
             {
-                ct.ThrowIfCancellationRequested();
-                var relPath = Path.GetRelativePath(tempDir, file);
-                var destPath = Path.Combine(editorModsFolder, relPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-                File.Copy(file, destPath, true);
+                var sourceSubDir = Path.Combine(contentDir, subDir);
+                if (!Directory.Exists(sourceSubDir)) continue;
+
+                // Map: AC's content/cars/{carname}/ -> ACE's content/cars/{carname}/
+                // The structure is the same for both games
+                var targetDir = Path.Combine(aceContentFolder, (modType == "Car" ? "cars" : "tracks"), subDir);
+                Directory.CreateDirectory(targetDir);
+
+                foreach (var file in Directory.GetFiles(sourceSubDir, "*", SearchOption.AllDirectories))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var rel = Path.GetRelativePath(sourceSubDir, file);
+                    var dest = Path.Combine(targetDir, rel);
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                    File.Copy(file, dest, true);
+                    fileCount++;
+                }
             }
 
-            // Step 4: Copy a manifest to the mods folder for tracking
-            progress?.Report(0.7);
-            var manifestPath = Path.Combine(aceModsFolder, $"{modName}.evomanifest.json");
+            if (fileCount == 0)
+            {
+                // No specific car/track subdirs found - copy all to mod folder
+                var fallbackDir = Path.Combine(aceContentFolder, "cars", modName);
+                Directory.CreateDirectory(fallbackDir);
+                foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var rel = Path.GetRelativePath(tempDir, file);
+                    var dest = Path.Combine(fallbackDir, rel);
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                    File.Copy(file, dest, true);
+                    fileCount++;
+                }
+            }
+
+            progress?.Report(0.8);
+            Log.Information("  Copied {Count} files to {Path}", fileCount, aceContentFolder);
+
+            // Step 4: Create mod manifest
             var manifest = new SidecarManifest
             {
                 Name = modName,
                 Type = modType,
                 Version = "1.0",
                 Author = "AC Converted",
-                Description = $"AC mod extracted. Use ACE Editor to export as .kspkg",
+                Description = $"AC mod installed to content overlay: {modName}",
                 InstalledAt = DateTime.UtcNow.ToString("O")
             };
+
+            var manifestPath = Path.Combine(aceContentFolder, "cars", modName, ".evomanifest.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(manifestPath)!);
             File.WriteAllText(manifestPath, System.Text.Json.JsonSerializer.Serialize(manifest,
                 new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
-            // Step 5: Launch ACE Editor SDK from game directory
-            progress?.Report(0.9);
-            var sdkPath = DetectSdkPath();
-            var gameDir = DetectGameDir();
-
-            if (sdkPath != null && gameDir != null)
-            {
-                var editorExe = Path.Combine(sdkPath, "AssettoCorsaEVOEditor.exe");
-                var psi = new ProcessStartInfo(editorExe)
-                {
-                    WorkingDirectory = gameDir,
-                    UseShellExecute = true,
-                    Arguments = $"\"{editorModsFolder}\""
-                };
-                Process.Start(psi);
-            }
-
             progress?.Report(1.0);
-            Log.Information("Conversion prepared: {Name}", modName);
+            Log.Information("Conversion complete: {Name} ({Count} files)", modName, fileCount);
 
             return new ConversionResult
             {
                 Success = true,
-                OutputKspkgPath = editorModsFolder,
+                OutputKspkgPath = aceContentFolder,
                 ModName = modName,
-                ErrorMessage = $"AC mod prepared: {modName}\n\n" +
-                    $"Type: {modType}\n\n" +
-                    "ACE EVO only loads .kspkg mod files.\n" +
-                    "ACE Modder has been opened with your mod files.\n\n" +
-                    "In the ACE Modder:\n" +
-                    "1. Open your mod from the project panel\n" +
-                    "2. Export/Pack as .kspkg\n" +
-                    "3. Drop the .kspkg file into EVO Mod Manager\n\n" +
-                    "Files also copied to:\n" +
-                    $"{editorModsFolder}"
+                ErrorMessage = $"AC mod installed to content overlay: {modName}\n\n" +
+                    $"{fileCount} files copied to:\n{aceContentFolder}\n\n" +
+                    "The game reads from both content.kspkg and ACE/content/\n" +
+                    "Launch ACE EVO to test if the mod works."
             };
         }
         catch (Exception ex)
@@ -121,37 +130,42 @@ public class ModConverterService : IModConverterService
         }
     }
 
-    private static (string modType, string modName, string contentDir) AnalyzeMod(string dir, string sourcePath)
+    private static (string modType, string modName, string contentDir, List<string> subDirs) AnalyzeMod(string dir, string sourcePath)
     {
+        var name = Path.GetFileNameWithoutExtension(sourcePath);
+
+        // AC mods: content/cars/{carname}/ or content/tracks/{trackname}/
         var contentDir = FindDirectory(dir, "content") ?? dir;
         var carsDir = Path.Combine(contentDir, "cars");
         var tracksDir = Path.Combine(contentDir, "tracks");
 
         if (Directory.Exists(carsDir))
         {
-            var subdirs = Directory.GetDirectories(carsDir);
-            return ("Car", subdirs.Length > 0 ? Path.GetFileName(subdirs[0]) : Path.GetFileNameWithoutExtension(sourcePath), carsDir);
+            var subs = Directory.GetDirectories(carsDir).Select(Path.GetFileName).ToList();
+            return ("Car", subs.Count > 0 ? subs[0] : name, carsDir, subs);
         }
         if (Directory.Exists(tracksDir))
         {
-            var subdirs = Directory.GetDirectories(tracksDir);
-            return ("Track", subdirs.Length > 0 ? Path.GetFileName(subdirs[0]) : Path.GetFileNameWithoutExtension(sourcePath), tracksDir);
+            var subs = Directory.GetDirectories(tracksDir).Select(Path.GetFileName).ToList();
+            return ("Track", subs.Count > 0 ? subs[0] : name, tracksDir, subs);
         }
 
+        // Fallback: standalone cars/ or tracks/ at any depth
         var anyCars = FindDirectory(dir, "cars");
         if (anyCars != null)
         {
-            var subdirs = Directory.GetDirectories(anyCars);
-            return ("Car", subdirs.Length > 0 ? Path.GetFileName(subdirs[0]) : Path.GetFileNameWithoutExtension(sourcePath), anyCars);
+            var subs = Directory.GetDirectories(anyCars).Select(Path.GetFileName).ToList();
+            return ("Car", subs.Count > 0 ? subs[0] : name, anyCars, subs);
         }
         var anyTracks = FindDirectory(dir, "tracks");
         if (anyTracks != null)
         {
-            var subdirs = Directory.GetDirectories(anyTracks);
-            return ("Track", subdirs.Length > 0 ? Path.GetFileName(subdirs[0]) : Path.GetFileNameWithoutExtension(sourcePath), anyTracks);
+            var subs = Directory.GetDirectories(anyTracks).Select(Path.GetFileName).ToList();
+            return ("Track", subs.Count > 0 ? subs[0] : name, anyTracks, subs);
         }
 
-        return ("Unknown", Path.GetFileNameWithoutExtension(sourcePath), dir);
+        // Unknown type - just copy everything
+        return ("Unknown", name, dir, new List<string> { name });
     }
 
     private static string? FindDirectory(string root, string name)
@@ -165,11 +179,6 @@ public class ModConverterService : IModConverterService
             if (File.Exists(Path.Combine(p, "AssettoCorsaEVOEditor.exe"))) return p;
         return null;
     }
-
-    private static string? DetectGameDir()
-    {
-        foreach (var p in new[] { @"D:\SteamLibrary\steamapps\common\Assetto Corsa EVO", @"G:\GAMES\SteamLibrary\steamapps\common\Assetto Corsa EVO" })
-            if (File.Exists(Path.Combine(p, "AssettoCorsaEVO.exe"))) return p;
-        return null;
-    }
 }
+
+
