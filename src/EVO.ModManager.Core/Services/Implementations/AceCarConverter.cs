@@ -1,4 +1,5 @@
 using ProtoBuf;
+using System.Linq;
 using Serilog;
 using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
@@ -177,21 +178,16 @@ public class AceCarConverter
 
     private void CreateActorFile(string actorPath, string carName, string meshesDir)
     {
+        // Try to find the largest mesh for body, others for interior/wheels
+        var meshFiles = System.IO.Directory.GetFiles(meshesDir, "*.mesh");
+        var bodyMesh = meshFiles.Length > 0 ? meshFiles[0] : null ?? $"content\\cars\\{carName}\\meshes\\body.mesh";
+        var bodyName = System.IO.Path.GetFileName(bodyMesh);
+
         var actor = new CarActorDataProto
         {
             BaseMeshes = new CarActorDataProto.BaseMeshesProto
             {
-                BodyMesh = $"content\\cars\\{carName}\\meshes\\body.mesh",
-                Interior = new CarActorDataProto.BaseMeshesProto.BaseMeshProto
-                {
-                    MeshPath = $"content\\cars\\{carName}\\meshes\\interior.mesh",
-                    ShowroomInvisible = true
-                },
-                SteeringWheel = new CarActorDataProto.BaseMeshesProto.BaseMeshProto
-                {
-                    MeshPath = $"content\\cars\\{carName}\\meshes\\steering_wheel.mesh",
-                    ShowroomInvisible = true
-                }
+                BodyMesh = $"content\\cars\\{carName}\\meshes\\{bodyName}",
             },
             LodOutDistance = 500f,
             LodInDistances = new List<float> { 15f, 30f, 60f, 120f }
@@ -362,6 +358,9 @@ public struct ProtoField2
     public string? StringValue;
     public int IntValue;
 }
+
+
+
 
 
 
