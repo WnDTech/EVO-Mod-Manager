@@ -34,6 +34,7 @@ public class LegacyCarConverter
 
         try
         {
+            if (carName.Length > 9) carName = carName.Substring(0, 9);
             Directory.CreateDirectory(tempDir);
             var carDir = Path.Combine(tempDir, "content", "cars", carName);
             var meshesDir = Path.Combine(carDir, "meshes");
