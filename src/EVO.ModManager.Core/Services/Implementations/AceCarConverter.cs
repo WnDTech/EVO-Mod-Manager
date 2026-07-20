@@ -34,6 +34,7 @@ public class AceCarConverter
 
             // 2. Convert .kn5 files to .mesh
             var kn5Files = Directory.GetFiles(sourceDir, "*.kn5", SearchOption.AllDirectories);
+            Log.Information("  Found {Count} kn5 files in {Dir}", kn5Files.Length, sourceDir);
             var totalMeshCount = 0;
             foreach (var kn5 in kn5Files)
             {
@@ -93,77 +94,59 @@ public class AceCarConverter
     {
         try
         {
-            var data = File.ReadAllBytes(kn5Path);
-            if (data.Length < 8 || System.Text.Encoding.ASCII.GetString(data, 0, 3) != "kn5")
+            var parser = new Kn5Parser();
+            var result = parser.ParseWithFallback(kn5Path);
+            if (!result.Success || result.Meshes.Count == 0)
                 return false;
 
-            // Extract vertex data (simplified - scan for position patterns)
-            var positions = new List<float>();
-            var normals = new List<float>();
-            var uvs = new List<float>();
-            var indices = new List<uint>();
+            var allPositions = new List<float>();
+            var allNormals = new List<float>();
+            var allUVs = new List<float>();
+            var allIndices = new List<uint>();
+            int indexOffset = 0;
 
-            // Scan for valid vertex positions (3 consecutive reasonable floats)
-            for (int offset = 50; offset < data.Length - 12 && positions.Count < 3000; offset += 4)
+            foreach (var mesh in result.Meshes)
             {
-                float x = BitConverter.ToSingle(data, offset);
-                float y = BitConverter.ToSingle(data, offset + 4);
-                float z = BitConverter.ToSingle(data, offset + 8);
-                if (float.IsNormal(x) && float.IsNormal(y) && float.IsNormal(z) &&
-                    Math.Abs(x) < 50 && Math.Abs(y) < 50 && Math.Abs(z) < 50)
-                {
-                    positions.Add(x); positions.Add(y); positions.Add(z);
-                    normals.Add(0); normals.Add(1); normals.Add(0); // placeholder normals
-                    uvs.Add(0); uvs.Add(0); // placeholder UVs
-                }
+                allPositions.AddRange(mesh.Vertices);
+                allNormals.AddRange(mesh.Normals);
+                allUVs.AddRange(mesh.UVs);
+                foreach (var idx in mesh.Indices)
+                    allIndices.Add((uint)(idx + indexOffset));
+                indexOffset += mesh.Vertices.Length / 3;
             }
 
-            // Generate triangle indices (sequential quads as triangles)
-            int vertCount = positions.Count / 3;
-            for (int i = 0; i < vertCount - 2; i += 3)
-            {
-                indices.Add((uint)i);
-                indices.Add((uint)(i + 1));
-                indices.Add((uint)(i + 2));
-            }
+            if (allPositions.Count == 0) return false;
 
-            if (positions.Count == 0) return false;
-
-            // Compute bounding box
             float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
             float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
-            for (int i = 0; i < positions.Count; i += 3)
+            for (int i = 0; i < allPositions.Count; i += 3)
             {
-                if (positions[i] < minX) minX = positions[i];
-                if (positions[i + 1] < minY) minY = positions[i + 1];
-                if (positions[i + 2] < minZ) minZ = positions[i + 2];
-                if (positions[i] > maxX) maxX = positions[i];
-                if (positions[i + 1] > maxY) maxY = positions[i + 1];
-                if (positions[i + 2] > maxZ) maxZ = positions[i + 2];
+                if (allPositions[i] < minX) minX = allPositions[i];
+                if (allPositions[i + 1] < minY) minY = allPositions[i + 1];
+                if (allPositions[i + 2] < minZ) minZ = allPositions[i + 2];
+                if (allPositions[i] > maxX) maxX = allPositions[i];
+                if (allPositions[i + 1] > maxY) maxY = allPositions[i + 1];
+                if (allPositions[i + 2] > maxZ) maxZ = allPositions[i + 2];
             }
 
-            // Create protobuf MeshData
-            var mesh = new MeshDataProto
+            var meshProto = new MeshDataProto
             {
-                Type = 4, // MeshType_Car
+                Type = 4,
                 IsVisible = true,
                 IsRenderable = true,
                 LodOut = 1000f,
                 BoundsMin = new Vector3DataProto { X = minX, Y = minY, Z = minZ },
                 BoundsMax = new Vector3DataProto { X = maxX, Y = maxY, Z = maxZ },
-                ImportSettings = new ImportSettingsProto
-                {
-                    CreateDefaultsForMissingMaterials = true
-                },
+                ImportSettings = new ImportSettingsProto { CreateDefaultsForMissingMaterials = true },
                 Lods = new List<MeshLodDataProto>
                 {
                     new MeshLodDataProto
                     {
                         CastShadows = true,
-                        Positions = positions,
-                        Normals = normals,
-                        Texcoords = uvs,
-                        Indices = indices,
+                        Positions = allPositions,
+                        Normals = allNormals,
+                        Texcoords = allUVs,
+                        Indices = allIndices,
                         BoundsMin = new Vector3DataProto { X = minX, Y = minY, Z = minZ },
                         BoundsMax = new Vector3DataProto { X = maxX, Y = maxY, Z = maxZ },
                         Batches = new List<MeshBatchProto>
@@ -172,7 +155,7 @@ public class AceCarConverter
                             {
                                 Name = meshName,
                                 StartIndex = 0,
-                                IndexCount = indices.Count,
+                                IndexCount = allIndices.Count,
                                 Material = $"editor/{meshName}.material"
                             }
                         }
@@ -181,9 +164,8 @@ public class AceCarConverter
             };
 
             using var ms = new MemoryStream();
-            Serializer.Serialize(ms, mesh);
+            Serializer.Serialize(ms, meshProto);
             File.WriteAllBytes(meshPath, ms.ToArray());
-            Log.Information("  Created mesh: {Name} ({Verts} verts)", meshName, vertCount);
             return true;
         }
         catch (Exception ex)
@@ -380,6 +362,8 @@ public struct ProtoField2
     public string? StringValue;
     public int IntValue;
 }
+
+
 
 
 
