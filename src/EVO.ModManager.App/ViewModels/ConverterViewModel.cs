@@ -104,9 +104,8 @@ public partial class ConverterViewModel : ObservableObject
         Log("Starting conversion...");
 
         var outputDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "EVO Mod Manager", "converted");
-        Directory.CreateDirectory(outputDir);
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "Saved Games", "ACE", "mods");
 
         try
         {
