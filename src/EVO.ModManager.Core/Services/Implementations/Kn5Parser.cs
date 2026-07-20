@@ -21,69 +21,66 @@ public class Kn5Parser
         var vertices = new List<float>();
         var indices = new List<uint>();
 
-        // Scan for groups of 3 consecutive floats that look like car positions
-        var foundPositions = new List<(int offset, float x, float y, float z)>();
-        for (int offset = 8; offset < data.Length - 36; offset += 4)
+        int searchLimit = Math.Min(data.Length, 5 * 1024 * 1024); // Only scan first 5MB
+        int[] strides = { 32, 36, 48, 28, 64 };
+
+        // Scan at multiple strides to find positions
+        int bestStride = 32;
+        int bestCount = 0;
+        int bestStart = 100;
+
+        foreach (var stride in strides)
         {
-            float x = BitConverter.ToSingle(data, offset);
-            float y = BitConverter.ToSingle(data, offset + 4);
-            float z = BitConverter.ToSingle(data, offset + 8);
-            if (float.IsNormal(x) && float.IsNormal(y) && float.IsNormal(z) &&
-                Math.Abs(x) < 50 && Math.Abs(y) < 50 && Math.Abs(z) < 50 &&
-                (Math.Abs(x) > 0.001f || Math.Abs(y) > 0.001f || Math.Abs(z) > 0.001f))
+            int found = 0, firstPos = 0;
+            for (int offset = 100; offset < searchLimit - 36; offset += stride)
             {
-                foundPositions.Add((offset, x, y, z));
+                float x = BitConverter.ToSingle(data, offset);
+                float y = BitConverter.ToSingle(data, offset + 4);
+                float z = BitConverter.ToSingle(data, offset + 8);
+                if (float.IsNormal(x) && float.IsNormal(y) && float.IsNormal(z) &&
+                    Math.Abs(x) < 50 && Math.Abs(y) < 50 && Math.Abs(z) < 50 &&
+                    (Math.Abs(x) > 0.001f || Math.Abs(y) > 0.001f || Math.Abs(z) > 0.001f))
+                {
+                    found++;
+                    if (found == 1) firstPos = offset;
+                    if (found >= 20) break;
+                }
             }
+            if (found > bestCount) { bestCount = found; bestStride = stride; bestStart = firstPos; }
         }
 
-        // Use positions found in a cluster (consecutive offsets with vertex format 32 or 36 bytes)
-        if (foundPositions.Count < 3) return result;
+        if (bestCount < 3) return result;
 
-        // Determine vertex stride by looking at position spacing
-        var stride = foundPositions[1].offset - foundPositions[0].offset;
-        if (stride <= 0 || stride > 64) stride = 32;
-
-        // Extract positions with the determined stride
-        int firstOffset = foundPositions[0].offset;
-        for (int i = 0; i < Math.Min(foundPositions.Count, 3000); i++)
+        // Extract positions with best stride
+        for (int i = 0; i < 3000; i++)
         {
-            int off = firstOffset + i * stride;
+            int off = bestStart + i * bestStride;
             if (off + 12 > data.Length) break;
             float x = BitConverter.ToSingle(data, off);
             float y = BitConverter.ToSingle(data, off + 4);
             float z = BitConverter.ToSingle(data, off + 8);
-            if (!float.IsNormal(x) && !float.IsNormal(y) && !float.IsNormal(z)) break;
+            if (!float.IsNormal(x) && !float.IsNormal(y) && !float.IsNormal(z) &&
+                Math.Abs(x) < 0.001f && Math.Abs(y) < 0.001f && Math.Abs(z) < 0.001f) break;
             vertices.Add(x); vertices.Add(y); vertices.Add(z);
         }
 
         if (vertices.Count < 9) return result;
 
-        // Try to find indices (consecutive ushort values)
-        int indexSearchStart = firstOffset + (vertices.Count / 3) * stride + 4;
+        // Find indices
+        int idxSearchStart = bestStart + (vertices.Count / 3) * bestStride + 4;
         int maxVert = vertices.Count / 3;
-        for (int i = indexSearchStart; i < data.Length - 6 && indices.Count < 600; i += 2)
+        for (int i = idxSearchStart; i < Math.Min(data.Length, idxSearchStart + 50000) && indices.Count < 600; i += 2)
         {
             ushort i0 = BitConverter.ToUInt16(data, i);
             ushort i1 = BitConverter.ToUInt16(data, i + 2);
             ushort i2 = BitConverter.ToUInt16(data, i + 4);
-            if (i0 < maxVert && i1 < maxVert && i2 < maxVert &&
-                i0 != i1 && i1 != i2 && i0 != i2)
-            {
-                indices.Add(i0); indices.Add(i1); indices.Add(i2);
-                i += 4; // skip ahead
-            }
+            if (i0 < maxVert && i1 < maxVert && i2 < maxVert && i0 != i1 && i1 != i2 && i0 != i2)
+                { indices.Add(i0); indices.Add(i1); indices.Add(i2); i += 4; }
         }
 
         if (indices.Count == 0)
-        {
-            // Generate simple triangles from vertices
             for (int i = 0; i + 2 < vertices.Count / 3; i += 3)
-            {
-                indices.Add((uint)i);
-                indices.Add((uint)(i + 1));
-                indices.Add((uint)(i + 2));
-            }
-        }
+                { indices.Add((uint)i); indices.Add((uint)(i + 1)); indices.Add((uint)(i + 2)); }
 
         result.Success = true;
         result.Meshes.Add(new Kn5MeshData
@@ -286,5 +283,6 @@ public class Kn5MeshData
     public float[] UVs { get; set; } = Array.Empty<float>();
     public int[] Indices { get; set; } = Array.Empty<int>();
 }
+
 
 
