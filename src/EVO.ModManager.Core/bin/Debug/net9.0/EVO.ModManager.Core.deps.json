@@ -16,6 +16,7 @@
           "SkiaSharp": "4.150.1",
           "Syroot.BinaryData.Memory": "5.2.2",
           "System.ServiceModel.Syndication": "10.0.9",
+          "protobuf-net": "3.2.56",
           "ACEvo.Package": "1.0.0.0"
         },
         "runtime": {
@@ -53,6 +54,25 @@
           "lib/net8.0/Microsoft.Data.Sqlite.dll": {
             "assemblyVersion": "10.0.9.0",
             "fileVersion": "10.0.926.27113"
+          }
+        }
+      },
+      "protobuf-net/3.2.56": {
+        "dependencies": {
+          "protobuf-net.Core": "3.2.56"
+        },
+        "runtime": {
+          "lib/net8.0/protobuf-net.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.2.56.57311"
+          }
+        }
+      },
+      "protobuf-net.Core/3.2.56": {
+        "runtime": {
+          "lib/net8.0/protobuf-net.Core.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.2.56.57311"
           }
         }
       },
@@ -354,6 +374,20 @@
       "sha512": "sha512-iZrONyMKPjxfVZnUktqO30QjzNwAGH+AxM61s8lKQnVhgbQ3bn0hiXI129ZmVicEbIcwljyy2OVsIYUR51ZHKQ==",
       "path": "microsoft.data.sqlite.core/10.0.9",
       "hashPath": "microsoft.data.sqlite.core.10.0.9.nupkg.sha512"
+    },
+    "protobuf-net/3.2.56": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4IPJeTYAMNewlN8MDaFkcmR/9hLhJeo9eARnTh104zh7mf+vXT2gu5MUfUnkSQU+CH578Q6vcdU7LQDQPG6eaw==",
+      "path": "protobuf-net/3.2.56",
+      "hashPath": "protobuf-net.3.2.56.nupkg.sha512"
+    },
+    "protobuf-net.Core/3.2.56": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-d6QOukTpDzs7zZv9tPnBZMtvHDNeHJQXUhMx54g4urUQsXK3oo9U70H9HvklYq7hlQ4A7AHJl7EVEqyCXXIl8Q==",
+      "path": "protobuf-net.core/3.2.56",
+      "hashPath": "protobuf-net.core.3.2.56.nupkg.sha512"
     },
     "Serilog/4.4.0": {
       "type": "package",

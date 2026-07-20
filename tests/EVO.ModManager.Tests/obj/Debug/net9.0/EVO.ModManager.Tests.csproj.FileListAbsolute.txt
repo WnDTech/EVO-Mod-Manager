@@ -149,3 +149,5 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\EVO.ModManager.Tests.pdb
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\EVO.ModManager.Tests.genruntimeconfig.cache
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\ref\EVO.ModManager.Tests.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\protobuf-net.dll
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\protobuf-net.Core.dll
