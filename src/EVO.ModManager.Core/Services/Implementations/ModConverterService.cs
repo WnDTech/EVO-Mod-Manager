@@ -1,3 +1,4 @@
+using System.Linq;
 using Serilog;
 using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
@@ -24,7 +25,7 @@ public class ModConverterService : IModConverterService
 
         try
         {
-            Log.Information("=== AC-to-ACE Converter (.kspkg) ===");
+            Log.Information("=== AC-to-ACE Converter (AceCarConverter) ===");
             Log.Information("Source: {Source}", sourcePath);
 
             progress?.Report(0.1);
@@ -32,75 +33,32 @@ public class ModConverterService : IModConverterService
             await archiveService.ExtractArchiveAsync(sourcePath, tempDir, null, ct);
 
             progress?.Report(0.3);
-            var (modType, modName, contentDir, subDirs) = AnalyzeMod(tempDir, sourcePath);
+            var (modType, modName, contentDir, _) = AnalyzeMod(tempDir, sourcePath);
+            Log.Information("  Type: {Type}, Name: {Name}", modType, modName);
 
             progress?.Report(0.5);
-            var fileCount = 0;
-            var kspkgPath = Path.Combine(aceModsFolder, modName + ".kspkg");
+            var converter = new AceCarConverter();
+            var (result, kspkgPath) = converter.Convert(modName, contentDir, aceModsFolder);
 
-            using (var builder = new KspkgBuilder(kspkgPath))
+            if (result.Success)
             {
-                foreach (var subDir in subDirs)
+                progress?.Report(0.9);
+                var manifest = new SidecarManifest
                 {
-                    var srcDir = Path.Combine(contentDir, subDir);
-                    if (!Directory.Exists(srcDir)) continue;
-
-                    var prefix = (modType == "Car" ? "content\\cars\\" : "content\\tracks\\") + subDir + "\\";
-                    builder.AddDirectory(prefix);
-
-                    foreach (var file in Directory.GetFiles(srcDir, "*", SearchOption.AllDirectories))
-                    {
-                        ct.ThrowIfCancellationRequested();
-                        var rel = Path.GetRelativePath(srcDir, file).Replace("/", "\\");
-                        builder.AddFile(prefix + rel, File.ReadAllBytes(file));
-                        fileCount++;
-                    }
-                }
-
-                if (fileCount == 0)
-                {
-                    var prefix = "content\\cars\\" + modName + "\\";
-                    builder.AddDirectory(prefix);
-                    foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
-                    {
-                        ct.ThrowIfCancellationRequested();
-                        var rel = Path.GetRelativePath(tempDir, file).Replace("/", "\\");
-                        builder.AddFile(prefix + rel, File.ReadAllBytes(file));
-                        fileCount++;
-                    }
-                }
-
-                builder.Build();
+                    Name = modName,
+                    Type = modType,
+                    Version = "1.0",
+                    Author = "AC Converted",
+                    Description = $"AC mod converted with ACE formats: {modName}",
+                    InstalledAt = DateTime.UtcNow.ToString("O")
+                };
+                var manifestPath = Path.Combine(aceModsFolder, modName + ".evomanifest.json");
+                File.WriteAllText(manifestPath, System.Text.Json.JsonSerializer.Serialize(manifest,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
             }
 
-            Log.Information("  Created kspkg: {Path} ({Count} files)", kspkgPath, fileCount);
-
-            // Create manifest
-            progress?.Report(0.9);
-            var manifest = new SidecarManifest
-            {
-                Name = modName,
-                Type = modType,
-                Version = "1.0",
-                Author = "AC Converted",
-                Description = $"AC mod converted to .kspkg: {modName}",
-                InstalledAt = DateTime.UtcNow.ToString("O")
-            };
-            var manifestPath = Path.Combine(aceModsFolder, modName + ".evomanifest.json");
-            File.WriteAllText(manifestPath, System.Text.Json.JsonSerializer.Serialize(manifest,
-                new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-
             progress?.Report(1.0);
-            return new ConversionResult
-            {
-                Success = true,
-                OutputKspkgPath = kspkgPath,
-                ModName = modName,
-                ErrorMessage = $"AC mod converted to .kspkg: {modName}\n\n" +
-                    $"{fileCount} files packed into:\n{kspkgPath}\n\n" +
-                    "Mod installed to ACE mods folder.\n" +
-                    "Launch ACE EVO to test."
-            };
+            return result;
         }
         catch (Exception ex)
         {
@@ -164,3 +122,4 @@ public class ModConverterService : IModConverterService
         return null;
     }
 }
+

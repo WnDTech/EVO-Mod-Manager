@@ -1,162 +1,368 @@
 using ProtoBuf;
-using ProtoBuf.Meta;
-using System.Text;
+using Serilog;
+using EVO.ModManager.Core.Models;
 using EVO.ModManager.Core.Services.Interfaces;
 
 namespace EVO.ModManager.Core.Services.Implementations;
 
-/// <summary>
-/// Converts AC car mods to ACE EVO format including .mesh, .material, .scene, .actor, cardata.car
-/// </summary>
 public class AceCarConverter
 {
-    private const ulong KEY = 0x9F9721A97D1135C1;
+    private static readonly ILogger Log = Serilog.Log.ForContext<AceCarConverter>();
 
     /// <summary>
-    /// Convert an extracted AC car mod to ACE EVO format in the mods folder
+    /// Convert extracted AC car mod to proper ACE EVO .kspkg file
     /// </summary>
-    public ConversionResult ConvertCar(string carName, string sourceDir, string aceModsFolder)
+    public (ConversionResult result, string kspkgPath) Convert(string carName, string sourceDir, string aceModsFolder)
     {
-        var aceCarDir = Path.Combine(aceModsFolder, carName);
-        Directory.CreateDirectory(aceCarDir);
+        var kspkgPath = Path.Combine(aceModsFolder, $"{carName}.kspkg");
+        var tempDir = Path.Combine(Path.GetTempPath(), "EVOMM", "ace_build", Guid.NewGuid().ToString("N")[..8]);
 
-        // 1. Create .scene file
-        CreateSceneFile(aceCarDir, carName);
-
-        // 2. Convert mesh files (.kn5 → .mesh)
-        var kn5Files = Directory.GetFiles(sourceDir, "*.kn5", SearchOption.AllDirectories);
-        foreach (var kn5 in kn5Files)
+        try
         {
-            ConvertKn5ToMesh(kn5, aceCarDir, carName);
-        }
+            Directory.CreateDirectory(tempDir);
 
-        // 3. Create basic material files
-        var meshesDir = Path.Combine(aceCarDir, "meshes");
-        if (Directory.Exists(meshesDir))
-        {
-            var meshFiles = Directory.GetFiles(meshesDir, "*.mesh", SearchOption.AllDirectories);
-            foreach (var mesh in meshFiles)
+            // 1. Create car directory structure inside temp
+            var carDir = Path.Combine(tempDir, "content", "cars", carName);
+            var meshesDir = Path.Combine(carDir, "meshes");
+            var materialsDir = Path.Combine(carDir, "materials");
+            var texturesDir = Path.Combine(carDir, "textures");
+            var dataDir = Path.Combine(carDir, "data");
+            Directory.CreateDirectory(meshesDir);
+            Directory.CreateDirectory(materialsDir);
+            Directory.CreateDirectory(texturesDir);
+            Directory.CreateDirectory(dataDir);
+
+            // 2. Convert .kn5 files to .mesh
+            var kn5Files = Directory.GetFiles(sourceDir, "*.kn5", SearchOption.AllDirectories);
+            var totalMeshCount = 0;
+            foreach (var kn5 in kn5Files)
             {
-                var matName = Path.GetFileNameWithoutExtension(mesh) + ".material";
-                var matPath = Path.Combine(aceCarDir, "materials", matName);
-                Directory.CreateDirectory(Path.GetDirectoryName(matPath)!);
-                CreateMaterialFile(matPath, mesh, aceCarDir);
+                var relName = Path.GetFileNameWithoutExtension(kn5);
+                var meshPath = Path.Combine(meshesDir, relName + ".mesh");
+                if (ConvertKn5ToMesh(kn5, meshPath, relName, carName, texturesDir))
+                    totalMeshCount++;
             }
+
+            // 3. Create .actor file
+            var actorPath = Path.Combine(carDir, $"{carName}.actor");
+            CreateActorFile(actorPath, carName, meshesDir);
+
+            // 4. Create .scene file
+            var scenePath = Path.Combine(carDir, $"{carName}.scene");
+            CreateSceneFile(scenePath, carName);
+
+            // 5. Create cardata.car
+            var carDataPath = Path.Combine(dataDir, "cardata.car");
+            CreateCarDataFile(carDataPath, carName);
+
+            // 6. Copy any DDS textures to .texture format
+            CopyTextures(sourceDir, texturesDir);
+
+            // 7. Create default material files
+            CreateDefaultMaterials(materialsDir, texturesDir);
+
+            // 8. Pack into .kspkg
+            PackToKspkg(tempDir, kspkgPath);
+
+            Log.Information("Car conversion complete: {Name} ({MeshCount} meshes) -> {Kspkg}", carName, totalMeshCount, kspkgPath);
+
+            return (new ConversionResult
+            {
+                Success = true,
+                ModName = carName,
+                ErrorMessage = $"Car converted: {carName}\n{totalMeshCount} meshes → mods/{carName}.kspkg"
+            }, kspkgPath);
         }
-
-        // 4. Create cardata.car
-        CreateCarDataFile(aceCarDir, carName);
-
-        return new ConversionResult
+        catch (Exception ex)
         {
-            Success = true,
-            ModName = carName,
-            ErrorMessage = $"Car converted: {carName}\nFiles in: {aceCarDir}"
-        };
+            Log.Error(ex, "Car conversion failed: {Name}", carName);
+            return (new ConversionResult
+            {
+                Success = false,
+                ModName = carName,
+                ErrorMessage = $"Conversion failed: {ex.Message}"
+            }, null!);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, true); } catch { }
+        }
     }
 
-    private void CreateSceneFile(string aceCarDir, string carName)
+    private bool ConvertKn5ToMesh(string kn5Path, string meshPath, string meshName, string carName, string texturesDir)
     {
-        var scenePath = Path.Combine(aceCarDir, $"{carName}.scene");
+        try
+        {
+            var data = File.ReadAllBytes(kn5Path);
+            if (data.Length < 8 || System.Text.Encoding.ASCII.GetString(data, 0, 3) != "kn5")
+                return false;
+
+            // Extract vertex data (simplified - scan for position patterns)
+            var positions = new List<float>();
+            var normals = new List<float>();
+            var uvs = new List<float>();
+            var indices = new List<uint>();
+
+            // Scan for valid vertex positions (3 consecutive reasonable floats)
+            for (int offset = 50; offset < data.Length - 12 && positions.Count < 3000; offset += 4)
+            {
+                float x = BitConverter.ToSingle(data, offset);
+                float y = BitConverter.ToSingle(data, offset + 4);
+                float z = BitConverter.ToSingle(data, offset + 8);
+                if (float.IsNormal(x) && float.IsNormal(y) && float.IsNormal(z) &&
+                    Math.Abs(x) < 50 && Math.Abs(y) < 50 && Math.Abs(z) < 50)
+                {
+                    positions.Add(x); positions.Add(y); positions.Add(z);
+                    normals.Add(0); normals.Add(1); normals.Add(0); // placeholder normals
+                    uvs.Add(0); uvs.Add(0); // placeholder UVs
+                }
+            }
+
+            // Generate triangle indices (sequential quads as triangles)
+            int vertCount = positions.Count / 3;
+            for (int i = 0; i < vertCount - 2; i += 3)
+            {
+                indices.Add((uint)i);
+                indices.Add((uint)(i + 1));
+                indices.Add((uint)(i + 2));
+            }
+
+            if (positions.Count == 0) return false;
+
+            // Compute bounding box
+            float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+            for (int i = 0; i < positions.Count; i += 3)
+            {
+                if (positions[i] < minX) minX = positions[i];
+                if (positions[i + 1] < minY) minY = positions[i + 1];
+                if (positions[i + 2] < minZ) minZ = positions[i + 2];
+                if (positions[i] > maxX) maxX = positions[i];
+                if (positions[i + 1] > maxY) maxY = positions[i + 1];
+                if (positions[i + 2] > maxZ) maxZ = positions[i + 2];
+            }
+
+            // Create protobuf MeshData
+            var mesh = new MeshDataProto
+            {
+                Type = 4, // MeshType_Car
+                IsVisible = true,
+                IsRenderable = true,
+                LodOut = 1000f,
+                BoundsMin = new Vector3DataProto { X = minX, Y = minY, Z = minZ },
+                BoundsMax = new Vector3DataProto { X = maxX, Y = maxY, Z = maxZ },
+                ImportSettings = new ImportSettingsProto
+                {
+                    CreateDefaultsForMissingMaterials = true
+                },
+                Lods = new List<MeshLodDataProto>
+                {
+                    new MeshLodDataProto
+                    {
+                        CastShadows = true,
+                        Positions = positions,
+                        Normals = normals,
+                        Texcoords = uvs,
+                        Indices = indices,
+                        BoundsMin = new Vector3DataProto { X = minX, Y = minY, Z = minZ },
+                        BoundsMax = new Vector3DataProto { X = maxX, Y = maxY, Z = maxZ },
+                        Batches = new List<MeshBatchProto>
+                        {
+                            new MeshBatchProto
+                            {
+                                Name = meshName,
+                                StartIndex = 0,
+                                IndexCount = indices.Count,
+                                Material = $"editor/{meshName}.material"
+                            }
+                        }
+                    }
+                }
+            };
+
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, mesh);
+            File.WriteAllBytes(meshPath, ms.ToArray());
+            Log.Information("  Created mesh: {Name} ({Verts} verts)", meshName, vertCount);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "  Failed to convert {Kn5}", kn5Path);
+            return false;
+        }
+    }
+
+    private void CreateActorFile(string actorPath, string carName, string meshesDir)
+    {
+        var actor = new CarActorDataProto
+        {
+            BaseMeshes = new CarActorDataProto.BaseMeshesProto
+            {
+                BodyMesh = $"content\\cars\\{carName}\\meshes\\body.mesh",
+                Interior = new CarActorDataProto.BaseMeshesProto.BaseMeshProto
+                {
+                    MeshPath = $"content\\cars\\{carName}\\meshes\\interior.mesh",
+                    ShowroomInvisible = true
+                },
+                SteeringWheel = new CarActorDataProto.BaseMeshesProto.BaseMeshProto
+                {
+                    MeshPath = $"content\\cars\\{carName}\\meshes\\steering_wheel.mesh",
+                    ShowroomInvisible = true
+                }
+            },
+            LodOutDistance = 500f,
+            LodInDistances = new List<float> { 15f, 30f, 60f, 120f }
+        };
+
+        using var ms = new MemoryStream();
+        Serializer.Serialize(ms, actor);
+        File.WriteAllBytes(actorPath, ms.ToArray());
+    }
+
+    private void CreateSceneFile(string scenePath, string carName)
+    {
+        // Minimal scene file - just enough for the game to discover the car
+        // Field 1: string carName, Field 2: string type, Field 3: scene data
         using var ms = new MemoryStream();
 
-        // Protobuf message matching the extracted scene structure
-        // Field 1: Type (string) = "Car"
-        WriteString(ms, 1, "Car");
-        // Field 2: MeshType (string) = "SMesh"  
-        WriteString(ms, 2, "SMesh");
-        // Field 3: Data (string) - car name, actor reference, position
+        // Write manual protobuf for now - Scene schema is complex
+        // Field 1: screen name (string)
+        ProtoWriter.WriteFieldProto(ms, 1, WireType.String);
+        var nameBytes = System.Text.Encoding.UTF8.GetBytes(carName);
+        ProtoWriter.WriteVarint(ms, (uint)nameBytes.Length);
+        ms.Write(nameBytes, 0, nameBytes.Length);
+
+        // Field 3: Car type reference
+        ProtoWriter.WriteFieldProto(ms, 3, WireType.Varint);
+        ProtoWriter.WriteVarint(ms, 1); // Car type enum value
+
+        // Field 5: actor path
         var actorPath = $"content\\cars\\{carName}\\{carName}.actor";
-        var data = $"{carName}\x1a\x03Car\"\x15\x00\x12\x00\x1a\x0f\x00\x00\x80?\x15\x00\x00\x80?\x1d\x00\x00\x80?a\x1f\x1f\x11\x11'j\x05\x1d\x00\x00zC\x03@{actorPath}\x1a\x00";
-        WriteString(ms, 3, data);
+        ProtoWriter.WriteFieldProto(ms, 5, WireType.String);
+        var actorBytes = System.Text.Encoding.UTF8.GetBytes(actorPath);
+        ProtoWriter.WriteVarint(ms, (uint)actorBytes.Length);
+        ms.Write(actorBytes, 0, actorBytes.Length);
 
-        // Write protobuf
         File.WriteAllBytes(scenePath, ms.ToArray());
-        }
-
-    private string BuildSceneData(string carName)
-    {
-        // Simplified scene data: name, actor path, position
-        var ms = new MemoryStream();
-        // Field 1: car name
-        WriteString(ms, 1, carName);
-        // Field 3: type "Car"
-        WriteString(ms, 3, "Car");
-        // Position fields
-        var posBytes = new byte[] { 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F };
-        WriteBytes(ms, 7, posBytes);
-        // Actor reference
-        WriteString(ms, 10, $"content\\cars\\{carName}\\{carName}.actor");
-        return Convert.ToBase64String(ms.ToArray());
     }
 
-    private void CreateMaterialFile(string matPath, string meshPath, string aceCarDir)
+    private void CreateCarDataFile(string carDataPath, string carName)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(matPath)!);
-        
-        // Create a basic proto material with essential properties
-        var fields = new List<ProtoField>
+        var carData = new CarDataProto
         {
-            new() { Number = 1, WireType = WireType.String, StringValue = "UberVehicleInteriorMaterial" },
-            new() { Number = 2, WireType = WireType.String, StringValue = "HasBaseColorMap" },
-            new ProtoField { Number = 3, WireType = WireType.String, StringValue = "HasNormalMap" },
-            new() { Number = 4, WireType = WireType.String, StringValue = "HasRoughnessMap" },
-            new() { Number = 5, WireType = WireType.String, StringValue = "ksBaseColor" },
-            new() { Number = 6, WireType = WireType.Fixed32, FloatValue = 1.0f },
-            new() { Number = 7, WireType = WireType.String, StringValue = "txDiffuse" },
-            new() { Number = 8, WireType = WireType.String, StringValue = $"content\\cars\\{Path.GetFileName(aceCarDir)}\\textures\\body_d.texture" },
-        };
-
-        File.WriteAllBytes(matPath, SerializeProto(fields));
-    }
-
-    private void CreateCarDataFile(string aceCarDir, string carName)
-    {
-        var dataPath = Path.Combine(aceCarDir, "data");
-        Directory.CreateDirectory(dataPath);
-        
-        // Create minimal cardata.car (protobuf)
-        var fields = new List<ProtoField>
-        {
-            new() { Number = 1, WireType = WireType.String, StringValue = carName },
-            new() { Number = 2, WireType = WireType.String, StringValue = "Car" },
-            new() { Number = 3, WireType = WireType.Fixed32, FloatValue = 1.0f }, // version
-        };
-        File.WriteAllBytes(Path.Combine(dataPath, "cardata.car"), SerializeProto(fields));
-    }
-
-    // Protobuf serialization helpers
-    private static byte[] SerializeProto(List<ProtoField> fields)
-    {
-        using var ms = new MemoryStream();
-        foreach (var field in fields)
-        {
-            WriteFieldHeader(ms, field.Number, field.WireType);
-            switch (field.WireType)
+            General = new GeneralCarDataProto
             {
-                case WireType.Varint:
-                    WriteVarint(ms, (uint)field.IntValue);
-                    break;
-                case WireType.Fixed32:
-                    var bytes = BitConverter.GetBytes(field.FloatValue);
-                    ms.Write(bytes, 0, 4);
-                    break;
-                case WireType.String:
-                    var strBytes = Encoding.UTF8.GetBytes(field.StringValue ?? "");
-                    WriteVarint(ms, (uint)strBytes.Length);
-                    ms.Write(strBytes, 0, strBytes.Length);
-                    break;
+                ScreenName = carName,
+                TotalMass = 1200f,
+                Fuel = 60f,
+                MaxFuel = 60f
+            },
+            Suspensions = new SuspensionsDataProto
+            {
+                WheelBase = 2.5f,
+                TrackFront = 1.5f,
+                TrackRear = 1.5f
+            }
+        };
+
+        using var ms = new MemoryStream();
+        Serializer.Serialize(ms, carData);
+        File.WriteAllBytes(carDataPath, ms.ToArray());
+    }
+
+    private void CopyTextures(string sourceDir, string texturesDir)
+    {
+        foreach (var ddsFile in Directory.GetFiles(sourceDir, "*.dds", SearchOption.AllDirectories))
+        {
+            try
+            {
+                var name = Path.GetFileNameWithoutExtension(ddsFile);
+                var data = File.ReadAllBytes(ddsFile);
+
+                // Create basic .texture descriptor
+                using var texMs = new MemoryStream();
+                var bw = new BinaryWriter(texMs);
+                bw.Write(10); // format = BC7
+                bw.Write(1024); // width
+                bw.Write(1024); // height
+                bw.Write(11); // mipCount
+                File.WriteAllBytes(Path.Combine(texturesDir, $"{name}.texture"), texMs.ToArray());
+
+                // For .texturemips, just copy the DDS pixel data (skip DDS header)
+                if (data.Length > 128)
+                {
+                    var pixelData = data[128..]; // skip DDS header
+                    File.WriteAllBytes(Path.Combine(texturesDir, $"{name}.texturemips"), pixelData);
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void CreateDefaultMaterials(string materialsDir, string texturesDir)
+    {
+        // Create a simple default material
+        var matPath = Path.Combine(materialsDir, "body.material");
+        // Minimal material with base color and normal map references
+        var fields = new List<ProtoField2>
+        {
+            new() { Number = 1, WireType = WireType.String, StringValue = "UberVehiclePaint" },
+            new() { Number = 2, WireType = WireType.String, StringValue = "txDiffuse" },
+            new() { Number = 3, WireType = WireType.String, StringValue = "txNormal" },
+            new() { Number = 4, WireType = WireType.String, StringValue = "HasNormalMap" },
+            new() { Number = 5, WireType = WireType.String, StringValue = "HasSpecularMap" },
+        };
+        using var ms = new MemoryStream();
+        foreach (var f in fields)
+        {
+            ProtoWriter.WriteFieldProto(ms, f.Number, f.WireType);
+            if (f.WireType == WireType.String)
+            {
+                var bytes = System.Text.Encoding.UTF8.GetBytes(f.StringValue!);
+                ProtoWriter.WriteVarint(ms, (uint)bytes.Length);
+                ms.Write(bytes, 0, bytes.Length);
             }
         }
-        return ms.ToArray();
+        File.WriteAllBytes(matPath, ms.ToArray());
+
+        // Copy the same material for common names
+        foreach (var name in new[] { "default", "paint", "glass", "wheel", "tyre", "interior", "light" })
+        {
+            var copyPath = Path.Combine(materialsDir, $"{name}.material");
+            File.Copy(matPath, copyPath, true);
+        }
     }
 
-    private static void WriteFieldHeader(Stream stream, int fieldNumber, WireType wireType)
+    private void PackToKspkg(string tempDir, string kspkgPath)
     {
-        WriteVarint(stream, ((uint)fieldNumber << 3) | (uint)wireType);
+        using var builder = new KspkgBuilder(kspkgPath);
+        var basePath = Path.Combine(tempDir, "content");
+        foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+        {
+            var relPath = Path.GetRelativePath(basePath, file).Replace("/", "\\");
+            var gamePath = "content\\" + relPath;
+
+            // Add parent directories
+            var dir = Path.GetDirectoryName(gamePath)!.Replace("/", "\\");
+            builder.AddDirectory(dir);
+
+            // Add the file
+            builder.AddFile(gamePath, File.ReadAllBytes(file));
+        }
+        builder.Build();
+    }
+}
+
+// Simple proto writer helpers
+public static class ProtoWriter
+{
+    public static void WriteFieldProto(Stream stream, int fieldNumber, WireType wireType)
+    {
+        WriteVarint(stream, (uint)((fieldNumber << 3) | (int)wireType));
     }
 
-    private static void WriteVarint(Stream stream, uint value)
+    public static void WriteVarint(Stream stream, uint value)
     {
         while (value >= 0x80)
         {
@@ -165,158 +371,13 @@ public class AceCarConverter
         }
         stream.WriteByte((byte)value);
     }
-
-    private static void WriteString(MemoryStream ms, int field, string value)
-    {
-        WriteFieldHeader(ms, field, WireType.String);
-        var bytes = Encoding.UTF8.GetBytes(value);
-        WriteVarint(ms, (uint)bytes.Length);
-        ms.Write(bytes, 0, bytes.Length);
-    }
-
-    private static void WriteBytes(MemoryStream ms, int field, byte[] data)
-    {
-        WriteFieldHeader(ms, field, WireType.String);
-        WriteVarint(ms, (uint)data.Length);
-        ms.Write(data, 0, data.Length);
-    }
-
-    private void ConvertKn5ToMesh(string kn5Path, string aceCarDir, string carName)
-    {
-        try
-        {
-            var data = File.ReadAllBytes(kn5Path);
-            if (data.Length < 8) return;
-
-            // Parse kn5 header
-            var magic = Encoding.ASCII.GetString(data, 0, 3);
-            if (magic != "kn5") return;
-
-            // Extract relative path for the mesh
-            var relPath = Path.GetRelativePath(
-                Path.Combine(Path.GetDirectoryName(kn5Path)!.Split(Path.DirectorySeparatorChar).TakeWhile(s => s != "content").LastOrDefault() ?? "", "content"),
-                kn5Path);
-            
-            // Create corresponding .mesh file path
-            var meshName = Path.GetFileNameWithoutExtension(kn5Path);
-            var meshRelPath = relPath.Replace(".kn5", ".mesh");
-            // Remove 'content\' prefix if present
-            if (meshRelPath.StartsWith("content\\")) meshRelPath = meshRelPath.Substring(8);
-            
-            var meshPath = Path.Combine(aceCarDir, meshRelPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(meshPath)!);
-
-            // Extract vertex data from kn5
-            // kn5 format: header + nodes + meshes + materials + textures
-            var vertices = new List<float>();
-            var indices = new List<int>();
-            var (verts, idxs) = ExtractKn5MeshData(data);
-            vertices = verts;
-            indices = idxs;
-
-            if (vertices.Count == 0)
-            {
-                // Create empty mesh placeholder
-                File.WriteAllBytes(meshPath, CreateEmptyMesh(meshName));
-                return;
-            }
-
-            // Create .mesh protobuf
-            var meshBytes = CreateMeshProtobuf(meshName, vertices.ToArray(), indices.ToArray());
-            File.WriteAllBytes(meshPath, meshBytes);
-        }
-        catch (Exception ex)
-        {
-            Serilog.Log.Warning(ex, "Failed to convert {Kn5}", kn5Path);
-        }
-    }
-
-    private (List<float> vertices, List<int> indices) ExtractKn5MeshData(byte[] data)
-    {
-        var verts = new List<float>();
-        var idxs = new List<int>();
-
-        // Scan for vertex data (look for patterns of 3 consecutive floats)
-        for (int offset = 16; offset < data.Length - 24; offset++)
-        {
-            // Look for a valid position (reasonable car coordinates)
-            float x = BitConverter.ToSingle(data, offset);
-            float y = BitConverter.ToSingle(data, offset + 4);
-            float z = BitConverter.ToSingle(data, offset + 8);
-
-            if (float.IsNormal(x) && float.IsNormal(y) && float.IsNormal(z) &&
-                Math.Abs(x) < 100 && Math.Abs(y) < 100 && Math.Abs(z) < 100)
-            {
-                verts.Add(x); verts.Add(y); verts.Add(z);
-                if (verts.Count >= 900) break; // First 300 verts max
-            }
-        }
-
-        // Look for triangle indices (consecutive uint16 values matching typical vertex counts)
-        for (int offset = 50; offset < data.Length - 6; offset += 2)
-        {
-            if (verts.Count > 0)
-            {
-                int maxVert = verts.Count / 3;
-                ushort i0 = BitConverter.ToUInt16(data, offset);
-                ushort i1 = BitConverter.ToUInt16(data, offset + 2);
-                ushort i2 = BitConverter.ToUInt16(data, offset + 4);
-                
-                if (i0 < maxVert && i1 < maxVert && i2 < maxVert &&
-                    i0 != i1 && i1 != i2 && i0 != i2)
-                {
-                    idxs.Add(i0); idxs.Add(i1); idxs.Add(i2);
-                    if (idxs.Count >= 300) break;
-                }
-            }
-        }
-
-        return (verts, idxs);
-    }
-
-    private byte[] CreateEmptyMesh(string name)
-    {
-        var fields = new List<ProtoField>
-        {
-            new ProtoField { Number = 1, WireType = WireType.Varint, IntValue = 1 },
-            new ProtoField { Number = 2, WireType = WireType.String, StringValue = name },
-            new ProtoField { Number = 3, WireType = WireType.String, StringValue = $"editor/{name}.material" },
-        };
-        return SerializeProto(fields);
-    }
-
-    private byte[] CreateMeshProtobuf(string name, float[] vertices, int[] indices)
-    {
-        var fields = new List<ProtoField>
-        {
-            new ProtoField { Number = 1, WireType = WireType.Varint, IntValue = 1 },
-            new ProtoField { Number = 2, WireType = WireType.String, StringValue = name },
-            new ProtoField { Number = 3, WireType = WireType.String, StringValue = $"editor/{name}.material" },
-        };
-
-        // Pack vertices as field 4 (repeated float)
-        var vertBytes = new byte[vertices.Length * 4];
-        Buffer.BlockCopy(vertices, 0, vertBytes, 0, vertBytes.Length);
-        fields.Add(new() { Number = 4, WireType = WireType.String, BytesValue = vertBytes });
-
-        // Pack indices as field 7 (repeated int, varint packed)
-        var idxMs = new MemoryStream();
-        foreach (var idx in indices) WriteVarint(idxMs, (uint)idx);
-        fields.Add(new() { Number = 7, WireType = WireType.String, BytesValue = idxMs.ToArray() });
-
-        return SerializeProto(fields);
-    }
 }
 
-internal class ProtoField
+public struct ProtoField2
 {
     public int Number;
     public WireType WireType;
-    public int IntValue;
-    public float FloatValue;
     public string? StringValue;
-    public byte[]? BytesValue;
+    public int IntValue;
 }
-
-
 
