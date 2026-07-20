@@ -72,6 +72,14 @@ public class LiveryLabService : ILiveryLabService
             LiveryLabPath = DetectLiveryLab();
             Log.Information("LiveryLab installed at {Path} ({Count} files)", LiveryLabPath, extracted);
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to download LiveryLab from {Url}", LiveryLabUrl);
+            throw new InvalidOperationException(
+                $"LiveryLab download failed: {ex.Message}\n\n" +
+                "LiveryLab downloads are currently temporarily unavailable from the official site.\n" +
+                "Skin mods are still installed directly by EVO Mod Manager without LiveryLab.", ex);
+        }
         finally
         {
             _isDownloading = false;
@@ -126,3 +134,4 @@ public class LiveryLabService : ILiveryLabService
         return null;
     }
 }
+

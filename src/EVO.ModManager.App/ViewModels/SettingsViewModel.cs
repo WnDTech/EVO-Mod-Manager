@@ -172,12 +172,20 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task DownloadLiveryLabAsync()
     {
-        StatusMessage = "Downloading LiveryLab...";
-        await _liveryLabService.AutoDownloadAsync();
-        LiveryLabStatus = _liveryLabService.IsInstalled
-            ? $"Available at {_liveryLabService.LiveryLabPath}"
-            : "Download failed";
-        StatusMessage = _liveryLabService.IsInstalled ? "LiveryLab installed" : "LiveryLab download failed";
+        try
+        {
+            StatusMessage = "Downloading LiveryLab...";
+            await _liveryLabService.AutoDownloadAsync();
+            LiveryLabStatus = _liveryLabService.IsInstalled
+                ? $"Available at {_liveryLabService.LiveryLabPath}"
+                : "Download failed";
+            StatusMessage = _liveryLabService.IsInstalled ? "LiveryLab installed" : "LiveryLab download failed";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
+            LiveryLabStatus = "Download unavailable";
+        }
     }
 
     [RelayCommand]
@@ -391,4 +399,5 @@ public partial class StorageLocationViewModel : ObservableObject
     [ObservableProperty]
     private string _freeSpace = "Unknown";
 }
+
 

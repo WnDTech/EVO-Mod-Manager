@@ -71,18 +71,8 @@ public class AceCarConverter
         WriteString(ms, 3, data);
 
         // Write protobuf
-        var protoFile = new ProtoFile
-        {
-            Fields = new List<ProtoField>
-            {
-                new() { Number = 1, WireType = WireType.String, StringValue = carName },
-                new() { Number = 2, WireType = WireType.String, StringValue = "SMesh" },
-                new ProtoField { Number = 3, WireType = WireType.String, StringValue = BuildSceneData(carName) }
-            }
-        };
-        
-        File.WriteAllBytes(scenePath, SerializeProto(protoFile));
-    }
+        File.WriteAllBytes(scenePath, ms.ToArray());
+        }
 
     private string BuildSceneData(string carName)
     {
@@ -145,7 +135,7 @@ public class AceCarConverter
             switch (field.WireType)
             {
                 case WireType.Varint:
-                    WriteVarint(ms, field.IntValue);
+                    WriteVarint(ms, (uint)field.IntValue);
                     break;
                 case WireType.Fixed32:
                     var bytes = BitConverter.GetBytes(field.FloatValue);
@@ -163,7 +153,7 @@ public class AceCarConverter
 
     private static void WriteFieldHeader(Stream stream, int fieldNumber, WireType wireType)
     {
-        WriteVarint(stream, (uint)((fieldNumber << 3) | (int)wireType));
+        WriteVarint(stream, ((uint)fieldNumber << 3) | (uint)wireType);
     }
 
     private static void WriteVarint(Stream stream, uint value)
@@ -327,5 +317,6 @@ internal class ProtoField
     public string? StringValue;
     public byte[]? BytesValue;
 }
+
 
 
