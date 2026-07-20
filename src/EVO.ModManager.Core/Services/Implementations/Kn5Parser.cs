@@ -69,8 +69,9 @@ public class Kn5Parser
         // Find indices
         int idxSearchStart = bestStart + (vertices.Count / 3) * bestStride + 4;
         int maxVert = vertices.Count / 3;
-        for (int i = idxSearchStart; i < Math.Min(data.Length, idxSearchStart + 50000) && indices.Count < 600; i += 2)
+        for (int i = idxSearchStart; i < data.Length - 6 && i < idxSearchStart + 50000 && indices.Count < 600; i += 2)
         {
+            if (i + 6 > data.Length) break;
             ushort i0 = BitConverter.ToUInt16(data, i);
             ushort i1 = BitConverter.ToUInt16(data, i + 2);
             ushort i2 = BitConverter.ToUInt16(data, i + 4);
@@ -283,6 +284,7 @@ public class Kn5MeshData
     public float[] UVs { get; set; } = Array.Empty<float>();
     public int[] Indices { get; set; } = Array.Empty<int>();
 }
+
 
 
 
