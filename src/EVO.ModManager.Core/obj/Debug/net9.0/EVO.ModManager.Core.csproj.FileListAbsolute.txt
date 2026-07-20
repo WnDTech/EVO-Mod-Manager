@@ -15,3 +15,6 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\ob
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\obj\Debug\net9.0\ref\EVO.ModManager.Core.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\bin\Debug\net9.0\Templates\car.actor
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\bin\Debug\net9.0\Templates\cardata.car
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\bin\Debug\net9.0\Templates\sd_banana.actor
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\bin\Debug\net9.0\Templates\actor_patched.bin
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\bin\Debug\net9.0\Templates\cardata_patched.bin

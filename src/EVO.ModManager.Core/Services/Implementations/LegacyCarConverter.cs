@@ -16,13 +16,12 @@ public class LegacyCarConverter
     {
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
         var templateDir = Path.Combine(baseDir, "Templates");
-        // Fall back to source directory for development
         if (!Directory.Exists(templateDir))
             templateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "src", "EVO.ModManager.Core", "Templates");
         if (!Directory.Exists(templateDir))
             templateDir = @"C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\Templates";
 
-        var actorPath = Path.Combine(templateDir, "car.actor");
+        var actorPath = Path.Combine(templateDir, "sd_banana.actor");
         var cardataPath = Path.Combine(templateDir, "cardata.car");
         ActorTemplate = File.Exists(actorPath) ? File.ReadAllBytes(actorPath) : Array.Empty<byte>();
         CardataTemplate = File.Exists(cardataPath) ? File.ReadAllBytes(cardataPath) : Array.Empty<byte>();
@@ -60,13 +59,28 @@ public class LegacyCarConverter
                     Log.Information("  Converted mesh: {Name}", relName);
             }
 
-            // 2. Copy actor template
-            if (ActorTemplate.Length > 0)
-                File.WriteAllBytes(Path.Combine(carDir, $"{carName}.actor"), ActorTemplate);
+            // 2. Patch and copy actor template (sd_banana → carName truncated to 9 chars)
+            var actorTemplate = ActorTemplate;
+            var cardataTemplate = CardataTemplate;
+            var shortName = carName.Length > 9 ? carName.Substring(0, 9) : carName.PadRight(9);
+            var srcBytes = System.Text.Encoding.ASCII.GetBytes("sd_banana");
+            var dstBytes = System.Text.Encoding.ASCII.GetBytes(shortName.PadRight(9, '_'));
 
-            // 3. Copy cardata template  
-            if (CardataTemplate.Length > 0)
-                File.WriteAllBytes(Path.Combine(dataDir, "cardata.car"), CardataTemplate);
+            if (actorTemplate.Length > 0)
+            {
+                var patched = new byte[actorTemplate.Length];
+                Buffer.BlockCopy(actorTemplate, 0, patched, 0, actorTemplate.Length);
+                PatchBytes(patched, srcBytes, dstBytes);
+                File.WriteAllBytes(Path.Combine(carDir, $"{carName}.actor"), patched);
+            }
+
+            if (cardataTemplate.Length > 0)
+            {
+                var patched = new byte[cardataTemplate.Length];
+                Buffer.BlockCopy(cardataTemplate, 0, patched, 0, cardataTemplate.Length);
+                PatchBytes(patched, srcBytes, dstBytes);
+                File.WriteAllBytes(Path.Combine(dataDir, "cardata.car"), patched);
+            }
 
             // 4. Create minimal scene file
             CreateMinimalScene(Path.Combine(carDir, $"{carName}.scene"), carName);
@@ -157,6 +171,17 @@ public class LegacyCarConverter
         File.WriteAllBytes(path, ms.ToArray());
     }
 
+    private static void PatchBytes(byte[] data, byte[] src, byte[] dst)
+    {
+        for (int i = 0; i < data.Length - src.Length; i++)
+        {
+            bool match = true;
+            for (int j = 0; j < src.Length; j++) { if (data[i + j] != src[j]) { match = false; break; } }
+            if (match)
+                for (int j = 0; j < dst.Length; j++) data[i + j] = dst[j];
+        }
+    }
+
     private void PackToKspkg(string tempDir, string kspkgPath)
     {
         using var builder = new KspkgBuilder(kspkgPath);
@@ -172,4 +197,8 @@ public class LegacyCarConverter
         builder.Build();
     }
 }
+
+
+
+
 

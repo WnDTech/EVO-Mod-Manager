@@ -89,3 +89,6 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\obj\Debug\net9.0-windows\ref\EVO.ModManager.App.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Templates\car.actor
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Templates\cardata.car
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Templates\actor_patched.bin
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Templates\cardata_patched.bin
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.App\bin\Debug\net9.0-windows\Templates\sd_banana.actor

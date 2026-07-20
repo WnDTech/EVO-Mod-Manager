@@ -153,3 +153,6 @@ C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\obj\Debug\net9.0\ref\EVO.ModManager.Tests.dll
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\Templates\car.actor
 C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\Templates\cardata.car
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\Templates\actor_patched.bin
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\Templates\cardata_patched.bin
+C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\tests\EVO.ModManager.Tests\bin\Debug\net9.0\Templates\sd_banana.actor

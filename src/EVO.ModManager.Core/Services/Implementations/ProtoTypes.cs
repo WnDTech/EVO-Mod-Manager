@@ -113,4 +113,6 @@ public class CarDataProto
 {
     [ProtoMember(1)] public GeneralCarDataProto General { get; set; } = new();
     [ProtoMember(2)] public SuspensionsDataProto Suspensions { get; set; } = new();
+    [ProtoMember(202)] public string ScreenName { get; set; } = "";
 }
+
