@@ -1,0 +1,175 @@
+using ProtoBuf;
+using Serilog;
+using EVO.ModManager.Core.Models;
+using System.IO;
+using EVO.ModManager.Core.Services.Interfaces;
+
+namespace EVO.ModManager.Core.Services.Implementations;
+
+public class LegacyCarConverter
+{
+    private static readonly ILogger Log = Serilog.Log.ForContext<LegacyCarConverter>();
+    private static readonly byte[] ActorTemplate;
+    private static readonly byte[] CardataTemplate;
+
+    static LegacyCarConverter()
+    {
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var templateDir = Path.Combine(baseDir, "Templates");
+        // Fall back to source directory for development
+        if (!Directory.Exists(templateDir))
+            templateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "src", "EVO.ModManager.Core", "Templates");
+        if (!Directory.Exists(templateDir))
+            templateDir = @"C:\Users\paul_\OneDrive\Documents\APP\EVO Mod Manager\src\EVO.ModManager.Core\Templates";
+
+        var actorPath = Path.Combine(templateDir, "car.actor");
+        var cardataPath = Path.Combine(templateDir, "cardata.car");
+        ActorTemplate = File.Exists(actorPath) ? File.ReadAllBytes(actorPath) : Array.Empty<byte>();
+        CardataTemplate = File.Exists(cardataPath) ? File.ReadAllBytes(cardataPath) : Array.Empty<byte>();
+    }
+
+    public (ConversionResult result, string kspkgPath) Convert(string carName, string sourceDir, string aceModsFolder)
+    {
+        var kspkgPath = Path.Combine(aceModsFolder, $"{carName}.kspkg");
+        var tempDir = Path.Combine(Path.GetTempPath(), "EVOMM", "ace_build", Guid.NewGuid().ToString("N")[..8]);
+
+        try
+        {
+            Directory.CreateDirectory(tempDir);
+            var carDir = Path.Combine(tempDir, "content", "cars", carName);
+            var meshesDir = Path.Combine(carDir, "meshes");
+            var dataDir = Path.Combine(carDir, "data");
+            var colliderDir = Path.Combine(carDir, "collider");
+            Directory.CreateDirectory(meshesDir);
+            Directory.CreateDirectory(dataDir);
+            Directory.CreateDirectory(colliderDir);
+
+            // 1. Convert .kn5 to .mesh using Kn5Parser
+            var kn5Files = Directory.GetFiles(sourceDir, "*.kn5", SearchOption.AllDirectories);
+            Log.Information("  Found {Count} kn5 files in {Dir}", kn5Files.Length, sourceDir);
+            
+            foreach (var kn5 in kn5Files)
+            {
+                var relName = Path.GetFileNameWithoutExtension(kn5);
+                var isCollider = relName.ToLower().Contains("collider");
+                var meshPath = isCollider 
+                    ? Path.Combine(colliderDir, $"{relName}.mesh")
+                    : Path.Combine(meshesDir, $"{relName}.mesh");
+                
+                if (ConvertKn5ToMesh(kn5, meshPath, relName))
+                    Log.Information("  Converted mesh: {Name}", relName);
+            }
+
+            // 2. Copy actor template
+            if (ActorTemplate.Length > 0)
+                File.WriteAllBytes(Path.Combine(carDir, $"{carName}.actor"), ActorTemplate);
+
+            // 3. Copy cardata template  
+            if (CardataTemplate.Length > 0)
+                File.WriteAllBytes(Path.Combine(dataDir, "cardata.car"), CardataTemplate);
+
+            // 4. Create minimal scene file
+            CreateMinimalScene(Path.Combine(carDir, $"{carName}.scene"), carName);
+
+            // 5. Pack into .kspkg
+            PackToKspkg(tempDir, kspkgPath);
+
+            var meshCount = Directory.GetFiles(meshesDir, "*.mesh").Length + Directory.GetFiles(colliderDir, "*.mesh").Length;
+            Log.Information("Car conversion complete: {Name} ({MeshCount} meshes) -> {Kspkg}", carName, meshCount, kspkgPath);
+
+            return (new ConversionResult
+            {
+                Success = true,
+                ModName = carName,
+                ErrorMessage = $"Car: {carName}\n{meshCount} meshes → mods/{carName}.kspkg"
+            }, kspkgPath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Car conversion failed: {Name}", carName);
+            return (new ConversionResult { Success = false, ModName = carName, ErrorMessage = $"Failed: {ex.Message}" }, null!);
+        }
+        finally { try { Directory.Delete(tempDir, true); } catch { } }
+    }
+
+    private bool ConvertKn5ToMesh(string kn5Path, string meshPath, string meshName)
+    {
+        try
+        {
+            var parser = new Kn5Parser();
+            var result = parser.ParseWithFallback(kn5Path);
+            if (!result.Success || result.Meshes.Count == 0) return false;
+
+            var allPos = new List<float>();
+            var allNrm = new List<float>();
+            var allUv = new List<float>();
+            var allIdx = new List<uint>();
+            int off = 0;
+
+            foreach (var m in result.Meshes)
+            {
+                allPos.AddRange(m.Vertices);
+                allNrm.AddRange(m.Normals);
+                allUv.AddRange(m.UVs);
+                foreach (var idx in m.Indices) allIdx.Add((uint)(idx + off));
+                off += m.Vertices.Length / 3;
+            }
+            if (allPos.Count == 0) return false;
+
+            var mesh = new MeshDataProto
+            {
+                Type = 4, IsVisible = true, IsRenderable = true, LodOut = 1000f,
+                BoundsMin = new Vector3DataProto { X = -5, Y = -5, Z = -5 },
+                BoundsMax = new Vector3DataProto { X = 5, Y = 5, Z = 5 },
+                ImportSettings = new ImportSettingsProto { CreateDefaultsForMissingMaterials = true },
+                Lods = new List<MeshLodDataProto>
+                {
+                    new MeshLodDataProto
+                    {
+                        CastShadows = true, Positions = allPos, Normals = allNrm, Texcoords = allUv, Indices = allIdx,
+                        BoundsMin = new Vector3DataProto { X = -5, Y = -5, Z = -5 },
+                        BoundsMax = new Vector3DataProto { X = 5, Y = 5, Z = 5 },
+                        Batches = new List<MeshBatchProto>
+                        {
+                            new MeshBatchProto { Name = meshName, StartIndex = 0, IndexCount = allIdx.Count, Material = $"editor/{meshName}.material" }
+                        }
+                    }
+                }
+            };
+
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, mesh);
+            File.WriteAllBytes(meshPath, ms.ToArray());
+            return true;
+        }
+        catch { return false; }
+    }
+
+    private void CreateMinimalScene(string path, string carName)
+    {
+        using var ms = new MemoryStream();
+        ProtoWriter.WriteFieldProto(ms, 1, WireType.String);
+        var nb = System.Text.Encoding.UTF8.GetBytes(carName);
+        ProtoWriter.WriteVarint(ms, (uint)nb.Length); ms.Write(nb, 0, nb.Length);
+        ProtoWriter.WriteFieldProto(ms, 5, WireType.String);
+        var ab = System.Text.Encoding.UTF8.GetBytes($"content\\cars\\{carName}\\{carName}.actor");
+        ProtoWriter.WriteVarint(ms, (uint)ab.Length); ms.Write(ab, 0, ab.Length);
+        File.WriteAllBytes(path, ms.ToArray());
+    }
+
+    private void PackToKspkg(string tempDir, string kspkgPath)
+    {
+        using var builder = new KspkgBuilder(kspkgPath);
+        var basePath = Path.Combine(tempDir, "content");
+        foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+        {
+            var rel = Path.GetRelativePath(basePath, file).Replace("/", "\\");
+            var gp = "content\\" + rel;
+            var dir = Path.GetDirectoryName(gp)!.Replace("/", "\\");
+            builder.AddDirectory(dir);
+            builder.AddFile(gp, File.ReadAllBytes(file));
+        }
+        builder.Build();
+    }
+}
+

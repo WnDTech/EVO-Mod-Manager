@@ -37,7 +37,7 @@ public class ModConverterService : IModConverterService
             Log.Information("  Type: {Type}, Name: {Name}", modType, modName);
 
             progress?.Report(0.5);
-            var converter = new AceCarConverter();
+            var converter = new LegacyCarConverter();
             var (result, kspkgPath) = converter.Convert(modName, contentDir, aceModsFolder);
 
             if (result.Success)
@@ -122,4 +122,5 @@ public class ModConverterService : IModConverterService
         return null;
     }
 }
+
 
