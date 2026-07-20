@@ -180,7 +180,7 @@ public class AceCarConverter
     {
         // Try to find the largest mesh for body, others for interior/wheels
         var meshFiles = System.IO.Directory.GetFiles(meshesDir, "*.mesh");
-        var bodyMesh = meshFiles.Length > 0 ? meshFiles[0] : null ?? $"content\\cars\\{carName}\\meshes\\body.mesh";
+        var bodyMesh = meshFiles.Where(f => !f.Contains("collider", StringComparison.OrdinalIgnoreCase)).OrderByDescending(f => new System.IO.FileInfo(f).Length).FirstOrDefault() ?? meshFiles.FirstOrDefault();
         var bodyName = System.IO.Path.GetFileName(bodyMesh);
 
         var actor = new CarActorDataProto
