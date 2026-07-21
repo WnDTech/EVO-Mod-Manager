@@ -29,12 +29,13 @@ public class LegacyCarConverter
 
     public (ConversionResult result, string kspkgPath) Convert(string carName, string sourceDir, string aceModsFolder)
     {
-        var kspkgPath = Path.Combine(aceModsFolder, $"{carName}.kspkg");
+        string kspkgPath = null!;
         var tempDir = Path.Combine(Path.GetTempPath(), "EVOMM", "ace_build", Guid.NewGuid().ToString("N")[..8]);
 
         try
         {
             if (carName.Length > 9) carName = carName.Substring(0, 9);
+            kspkgPath = Path.Combine(aceModsFolder, $"{carName}.kspkg");
             Directory.CreateDirectory(tempDir);
             var carDir = Path.Combine(tempDir, "content", "cars", carName);
             var meshesDir = Path.Combine(carDir, "meshes");
@@ -47,6 +48,34 @@ public class LegacyCarConverter
             // 1. Convert .kn5 to .mesh using Kn5Parser
             var kn5Files = Directory.GetFiles(sourceDir, "*.kn5", SearchOption.AllDirectories);
             Log.Information("  Found {Count} kn5 files in {Dir}", kn5Files.Length, sourceDir);
+            // 2. Convert DDS to .texture/.texturemips
+            var ddsFiles = System.IO.Directory.GetFiles(sourceDir, "*.dds", System.IO.SearchOption.AllDirectories);
+            foreach (var dds in ddsFiles) {
+                try {
+                    var name = System.IO.Path.GetFileNameWithoutExtension(dds);
+                    var data = System.IO.File.ReadAllBytes(dds);
+                    var texDir = System.IO.Path.Combine(carDir, "texture");
+                    System.IO.Directory.CreateDirectory(texDir);
+                    // .texture descriptor (12 bytes: format, width, height, mips)
+                    using var ms = new System.IO.MemoryStream();
+                    ms.WriteByte(10); ms.WriteByte(0); ms.WriteByte(0); ms.WriteByte(0);
+                    ms.WriteByte(0); ms.WriteByte(4); ms.WriteByte(0); ms.WriteByte(0);
+                    ms.WriteByte(0); ms.WriteByte(4); ms.WriteByte(0); ms.WriteByte(0);
+                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(texDir, name + ".texture"), ms.ToArray());
+                    // texturemips: skip DDS header
+                    if (data.Length > 128)
+                        System.IO.File.WriteAllBytes(System.IO.Path.Combine(texDir, name + ".texturemips"), data[128..]);
+                } catch { }
+            }
+
+            // 3. Create basic material files
+            var matsDir = System.IO.Path.Combine(carDir, "materials");
+            System.IO.Directory.CreateDirectory(matsDir);
+            foreach (var mesh in System.IO.Directory.GetFiles(meshesDir, "*.mesh")) {
+                var matName = System.IO.Path.GetFileNameWithoutExtension(mesh) + ".material";
+                System.IO.File.WriteAllText(System.IO.Path.Combine(matsDir, matName), "{}");
+            }
+
             
             foreach (var kn5 in kn5Files)
             {
@@ -198,6 +227,7 @@ public class LegacyCarConverter
         builder.Build();
     }
 }
+
 
 
 
