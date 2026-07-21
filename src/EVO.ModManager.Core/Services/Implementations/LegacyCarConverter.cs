@@ -89,29 +89,11 @@ public class LegacyCarConverter
                     Log.Information("  Converted mesh: {Name}", relName);
             }
 
-            // 2. Patch and copy actor template (sd_banana → carName truncated to 9 chars)
-            var actorTemplate = ActorTemplate;
-            var cardataTemplate = CardataTemplate;
-            var shortName = carName.Length > 9 ? carName.Substring(0, 9) : carName.PadRight(9);
-            var srcBytes = System.Text.Encoding.ASCII.GetBytes("sd_banana");
-            var dstBytes = System.Text.Encoding.ASCII.GetBytes(shortName.PadRight(9, '_'));
-
-            if (actorTemplate.Length > 0)
-            {
-                var patched = new byte[actorTemplate.Length];
-                Buffer.BlockCopy(actorTemplate, 0, patched, 0, actorTemplate.Length);
-                PatchBytes(patched, srcBytes, dstBytes);
-                File.WriteAllBytes(Path.Combine(carDir, $"{carName}.actor"), patched);
-            }
-
-            if (cardataTemplate.Length > 0)
-            {
-                var patched = new byte[cardataTemplate.Length];
-                Buffer.BlockCopy(cardataTemplate, 0, patched, 0, cardataTemplate.Length);
-                PatchBytes(patched, srcBytes, dstBytes);
-                File.WriteAllBytes(Path.Combine(dataDir, "cardata.car"), patched);
-            }
-
+            // 4. Copy game reference templates directly (no patching)
+            if (ActorTemplate.Length > 0)
+                File.WriteAllBytes(Path.Combine(carDir, carName + ".actor"), ActorTemplate);
+            if (CardataTemplate.Length > 0)
+                File.WriteAllBytes(Path.Combine(dataDir, "cardata.car"), CardataTemplate);
             // 4. Create minimal scene file
             CreateMinimalScene(Path.Combine(carDir, $"{carName}.scene"), carName);
 
@@ -227,6 +209,8 @@ public class LegacyCarConverter
         builder.Build();
     }
 }
+
+
 
 
 
